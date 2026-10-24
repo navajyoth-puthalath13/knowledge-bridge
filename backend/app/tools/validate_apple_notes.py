@@ -52,8 +52,14 @@ def validate(conn: Connector, out: Path) -> tuple[bool, str]:
     notes = conn.fetch([n.id for n in first])
     totals: dict[str, int] = {}
     lines += ["| Note | Locked | Features | Attachments | Warnings |", "| --- | --- | --- | --- | --- |"]
+    used: set[str] = set()
     for n in notes:
         stem = safe_filename(n.title)[:60]
+        base, i = stem, 2
+        while stem.casefold() in used:  # notes with the same title must not overwrite each other
+            stem = f"{base} ({i})"
+            i += 1
+        used.add(stem.casefold())
         feats = [k for k, rx in FEATURES.items() if re.search(rx, n.body or "", re.I)]
         for f in feats:
             totals[f] = totals.get(f, 0) + 1

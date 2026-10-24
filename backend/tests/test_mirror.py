@@ -127,3 +127,19 @@ def test_apple_notes_connector_reports_non_macos_cleanly():
         pytest.skip("covered by the macOS integration tests")
     ok, msg = AppleNotesConnector("", "Knowledge").health()
     assert not ok and "only available on macOS" in msg
+
+
+def test_validation_tool_keeps_notes_with_same_title(tmp_path):
+    import shutil
+
+    from app.connectors.folder import FolderConnector
+    from app.tools.validate_apple_notes import validate
+
+    src = tmp_path / "src"
+    src.mkdir()
+    for i in (1, 2):
+        (src / f"n{i}.html").write_text(f"<div>Same title</div><div>body {i}</div>")
+        (src / f"n{i}.meta.json").write_text(f'{{"id": "id{i}", "title": "Same title"}}')
+    validate(FolderConnector(src), tmp_path / "r")
+    assert (tmp_path / "r" / "Same title.mirror.md").exists()
+    assert (tmp_path / "r" / "Same title (2).mirror.md").exists()
