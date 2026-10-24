@@ -228,3 +228,26 @@ def test_apple_notes_subfolders_map_to_mirror_subfolders(env):
     assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge")) == ""
     assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Podcasts/2026")) == "Podcasts/2026"
     assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Talks: Q&A")) == "Talks Q&A"
+
+
+def test_vault_structure_created_before_first_sync(env):
+    from app.obsidian.structure import ensure_structure
+
+    created = ensure_structure(env.cfg)
+    for rel in ["Apple Notes", "Knowledge Bridge/Collections", "Knowledge Bridge/Entities/Books",
+                "Knowledge Bridge/Entities/Podcast Shows", "Knowledge Bridge/Entities/Podcast Episodes",
+                "Knowledge Bridge/Entities/People", "Knowledge Bridge/Entities/Events",
+                "Knowledge Bridge/Entities/Personal Thinking", "Knowledge Bridge/Index", "Knowledge Bridge/Logs"]:
+        assert (env.vault / rel).is_dir(), rel
+    assert "Knowledge Bridge/Entities/Books" in created
+    assert ensure_structure(env.cfg) == []  # idempotent
+
+
+def test_long_notes_are_trimmed_for_analysis(env):
+    from app.intelligence import pipeline
+
+    long = "<div>Reading list</div>" + "<div>" + ("word " * 5000) + "</div>"
+    env.edit_source("reading-list", html=long, modified_at="2026-10-25T00:00:00Z")
+    rep = env.sync()
+    assert any("only the first" in e["message"] for e in rep.errors)
+    assert len(env.mirror("Reading list").read_text("utf-8")) > pipeline.MAX_ANALYSIS_CHARS  # mirror is complete

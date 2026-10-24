@@ -47,8 +47,8 @@ def get_config(request: Request):
 
 @router.put("/config")
 def put_config(cfg: AppConfig, request: Request):
-    svc(request).update_config(cfg)
-    return {"ok": True, "problems": cfg.problems()}
+    created = svc(request).update_config(cfg)
+    return {"ok": True, "problems": cfg.problems(), "created_folders": created}
 
 
 class SecretIn(BaseModel):

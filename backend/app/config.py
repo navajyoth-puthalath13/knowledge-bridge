@@ -34,15 +34,16 @@ def data_dir() -> Path:
 
 
 ProviderName = Literal["none", "ollama", "gemini", "groq", "openai", "xai", "mock"]
-# Cloud providers need an API key. gemini and groq have free tiers; openai and xai are paid.
+# Cloud providers need an API key. groq and gemini have free tiers; openai and xai are paid
+# and are not offered in the app (kept only for compatibility).
 CLOUD_PROVIDERS = ("gemini", "groq", "openai", "xai")
 FREE_PROVIDERS = ("none", "ollama", "gemini", "groq")
 
 
 class ProviderConfig(BaseModel):
-    # "none" = rules-only (no note content leaves the Mac, but only already-known
-    # entities are recognised). "ollama" = local model, also fully local.
-    name: ProviderName = "none"
+    # "groq" (free tier) is the default. "none" = rules-only (only already-known
+    # entities are recognised). "ollama" = local model, fully on this Mac.
+    name: ProviderName = "groq"
     model: str = ""
     base_url: str = ""  # optional override, e.g. a different Ollama host
     temperature: float = 0.0

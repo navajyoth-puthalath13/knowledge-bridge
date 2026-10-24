@@ -15,6 +15,7 @@ from .connectors.apple_notes import AppleNotesConnector
 from .entities.types import COLLECTION_TYPE, NOTE_TYPE
 from .intelligence.registry import ensure_collections
 from .obsidian.render import render_all
+from .obsidian.structure import ensure_structure
 from .obsidian.writer import ScopedWriter, file_sha256
 from .providers import make_provider
 from .security.secrets import get_secret, storage_backend
@@ -28,6 +29,11 @@ class Service:
     def __init__(self, data: Path | None = None):
         self.data = data or data_dir()
         self.cfg = load_config()
+        # Rules-only was the old default; with a Groq key available, use Groq (free tier).
+        if self.cfg.provider.name == "none" and get_secret("groq"):
+            self.cfg.provider.name = "groq"
+            save_config(self.cfg)
+            log.info("Groq key found: switched AI provider from rules-only to Groq")
         self.db = Database(self.data / "knowledge-bridge.sqlite3")
         ensure_collections(self.db)
         self.job_lock = threading.Lock()
@@ -45,13 +51,25 @@ class Service:
         self.scheduler.start()
 
     # ------------------------------------------------------------------ config
-    def update_config(self, cfg: AppConfig) -> None:
+    def update_config(self, cfg: AppConfig) -> list[str]:
         source_changed = cfg.source != self.cfg.source
         self.cfg = cfg
         save_config(cfg)
         if source_changed:
             self._health_cache = None
+        created = self.prepare_vault()
         self._schedule_next()
+        return created
+
+    def prepare_vault(self) -> list[str]:
+        """Create the folder structure and collection pages in the vault (safe to repeat)."""
+        if self.cfg.problems() or self.job_lock.locked():
+            return []
+        created = ensure_structure(self.cfg)
+        render_all(self.db, self.cfg)
+        if created:
+            log.info("created vault folders: %s", ", ".join(created))
+        return created
 
     # ------------------------------------------------------------------ jobs
     def _progress(self, phase: str, cur: int, total: int, msg: str) -> None:

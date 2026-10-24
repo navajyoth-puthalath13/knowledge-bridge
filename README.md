@@ -34,7 +34,7 @@ scripts/build-mac.sh --install        # or: build "Knowledge Bridge.app" into /A
 
 In the app:
 
-1. **Setup** → *Load folders* → pick your Apple Notes folder. Choose your Obsidian vault. Pick an AI provider, save an API key if needed, then press *Test connection*. Free options: **Ollama** (runs on your Mac), **Google Gemini** free tier, **Groq** free tier. OpenAI and xAI are supported but paid.
+1. **Setup** → *Load folders* → pick your Apple Notes folder. Choose your Obsidian vault. Pick an AI provider, save an API key if needed, then press *Test connection*. Only free options are offered: **Groq** free tier (default), **Google Gemini** free tier, **Ollama** (runs on your Mac), or rules only. Saving Setup creates the whole folder structure in your vault.
 2. **Dashboard** → *Dry run* shows exactly what would be written, without writing anything. Then press *Sync now*.
 3. Open Obsidian → Graph View. Work through **Intelligence → Review queue** to confirm uncertain matches.
 4. Turn on automatic sync (Setup or Dashboard). It runs while the Mac is awake and the app is open. On macOS, closing the window keeps it running until you quit.

@@ -62,7 +62,9 @@ try {
   await page.getByRole("button", { name: "Dry run" }).click();
   await page.getByText("Dry run", { exact: true }).last().waitFor();
   await page.locator("td", { hasText: "Design Days 2026 — Day 2" }).first().waitFor();
-  assert.equal(fs.existsSync(path.join(vault, "Apple Notes")), false, "dry run must not write files");
+  // Saving Setup creates the empty folder structure; the dry run itself must not write any notes.
+  assert.ok(fs.existsSync(path.join(vault, "Knowledge Bridge", "Entities", "Books")), "folder structure created on save");
+  assert.deepEqual(fs.readdirSync(path.join(vault, "Apple Notes")), [], "dry run must not write notes");
   await shot("02-dry-run");
 
   step("sync now mirrors notes and builds the graph");

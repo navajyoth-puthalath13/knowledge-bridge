@@ -29,6 +29,9 @@ from .prompts import PROMPT_VERSION, build_messages
 
 log = logging.getLogger(__name__)
 PIPELINE_VERSION = "1"
+# Free tiers cap tokens per request/minute (Groq ~12k TPM on llama-3.3-70b). Very long notes are
+# trimmed for analysis only; the mirror and evidence checks always use the full note.
+MAX_ANALYSIS_CHARS = 16_000
 
 
 class IntegrityError(RuntimeError):
@@ -127,6 +130,9 @@ def analyse(ctx: Context, note: dict, text: str, result: NoteResult) -> tuple[No
     cands = _candidate_notes(ctx, note["id"], text) if ctx.cfg.intelligence.semantic_suggestions else []
     refs = {f"n{i + 1}": nid for i, (nid, _, _) in enumerate(cands)}
     cand_prompt = [(f"n{i + 1}", title, prev) for i, (_, title, prev) in enumerate(cands)]
+    if len(text) > MAX_ANALYSIS_CHARS:
+        result.warnings.append(f"note is long; only the first {MAX_ANALYSIS_CHARS:,} characters were analysed")
+        text = text[:MAX_ANALYSIS_CHARS]
     system, user = build_messages(note["title"], text, types, known, cand_prompt)
     key = sha256_text(json.dumps([ctx.processing_key(), [t.key for t in types], note["title"], text,
                                   [c[1] for c in cand_prompt]]))

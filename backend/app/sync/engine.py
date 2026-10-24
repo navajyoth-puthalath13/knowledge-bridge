@@ -25,6 +25,7 @@ from ..intelligence.normalize import safe_filename
 from ..intelligence.pipeline import Context, IntegrityError, process_note
 from ..obsidian.mirror import render_mirror, source_hash
 from ..obsidian.render import render_all
+from ..obsidian.structure import ensure_structure
 from ..obsidian.writer import ScopedWriter, file_sha256, sha256_text
 from ..providers.base import LLMProvider, ProviderError
 from ..storage.db import Database, now
@@ -279,6 +280,7 @@ class SyncEngine:
                 self._err(report, "configuration", p)
             return report
         if not dry_run:
+            ensure_structure(self.cfg)
             self.recover()
             with self.db.tx() as c:
                 report.run_id = c.execute("INSERT INTO sync_runs(started_at, dry_run, trigger) VALUES (?,?,?)",

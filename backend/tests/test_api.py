@@ -169,3 +169,38 @@ def test_secret_endpoint_never_returns_key(client):
     st = client.get("/status").json()
     assert st["provider"]["key_set"] is True and "sk-secret" not in str(st)
     assert "sk-secret" not in str(client.get("/config").json())
+
+
+def test_saving_setup_creates_vault_folders(tmp_path):
+    import shutil
+
+    from app.main import create_app
+
+    src = tmp_path / "src"
+    shutil.copytree(FIXTURES / "notes", src)
+    (tmp_path / "vault").mkdir()
+    with TestClient(create_app(TOKEN), headers={"Authorization": f"Bearer {TOKEN}"}) as c:
+        cfg = c.get("/config").json()
+        assert cfg["provider"]["name"] == "groq"  # free tier is the default
+        cfg["vault_path"] = str(tmp_path / "vault")
+        cfg["source"].update(kind="folder", folder_path=str(src))
+        r = c.put("/config", json=cfg).json()
+        assert "Knowledge Bridge/Entities/Books" in r["created_folders"]
+        assert (tmp_path / "vault" / "Knowledge Bridge" / "Collections" / "Books.md").exists()
+        assert (tmp_path / "vault" / "Apple Notes").is_dir()
+
+
+def test_rules_only_switches_to_groq_when_key_present(monkeypatch):
+    import json
+
+    from app.config import config_path
+    from app.service import Service
+
+    config_path().write_text(json.dumps({"provider": {"name": "none"}}))
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    s = Service()
+    try:
+        assert s.cfg.provider.name == "groq"
+        assert json.loads(config_path().read_text())["provider"]["name"] == "groq"
+    finally:
+        s.shutdown()

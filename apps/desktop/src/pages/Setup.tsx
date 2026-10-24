@@ -4,15 +4,14 @@ import type { AppCtx } from "../App";
 import { useAction, useLoad, useToast } from "../ui";
 
 type ProviderKey = Config["provider"]["name"];
+// Only free options are offered. Groq's free tier is the default.
 const PROVIDERS: Array<{ key: ProviderKey; label: string; local: boolean; free: boolean; placeholder: string; keyUrl?: string }> = [
-  { key: "ollama", label: "Ollama · free, on this Mac", local: true, free: true, placeholder: "llama3.1:8b" },
+  { key: "groq", label: "Groq · free tier (recommended)", local: false, free: true, placeholder: "llama-3.3-70b-versatile", keyUrl: "console.groq.com/keys" },
   { key: "gemini", label: "Google Gemini · free tier", local: false, free: true, placeholder: "gemini-2.5-flash", keyUrl: "aistudio.google.com/apikey" },
-  { key: "groq", label: "Groq · free tier", local: false, free: true, placeholder: "llama-3.3-70b-versatile", keyUrl: "console.groq.com/keys" },
+  { key: "ollama", label: "Ollama · free, on this Mac", local: true, free: true, placeholder: "llama3.1:8b" },
   { key: "none", label: "Rules only · free", local: true, free: true, placeholder: "" },
-  { key: "openai", label: "OpenAI · paid", local: false, free: false, placeholder: "gpt-4.1-mini" },
-  { key: "xai", label: "xAI Grok · paid", local: false, free: false, placeholder: "grok-3-mini" },
 ];
-const CLOUD: ProviderKey[] = ["gemini", "groq", "openai", "xai"];
+const CLOUD: ProviderKey[] = ["gemini", "groq"];
 
 interface Folder { account: string; path: string; note_count: number | null }
 
@@ -34,10 +33,11 @@ export function Setup({ status, refresh, sub }: AppCtx) {
   const set = (fn: (c: Config) => void) => setCfg((c) => { const n = structuredClone(c!); fn(n); return n; });
   const provider = PROVIDERS.find((p) => p.key === cfg.provider.name) ?? PROVIDERS[0];
   const save = () => run("save", async () => {
-    const r = await put<{ problems: string[] }>("/config", cfg);
+    const r = await put<{ problems: string[]; created_folders: string[] }>("/config", cfg);
     await reload();
     await refresh();
-    toast(r.problems.length ? `Saved. Still needed: ${r.problems.join(" ")}` : "Settings saved");
+    toast(r.problems.length ? `Saved. Still needed: ${r.problems.join(" ")}`
+      : r.created_folders.length ? `Settings saved. Created ${r.created_folders.length} folders in your vault.` : "Settings saved");
   });
   const pick = async (title: string, apply: (c: Config, path: string) => void) => {
     const p = await window.kb.pickFolder(title);
@@ -169,7 +169,8 @@ export function Setup({ status, refresh, sub }: AppCtx) {
               <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}>
                 <span className="grow">
                   <strong>{provider.free ? "Free cloud tier." : "Paid cloud service."}</strong> The text of new or changed notes in the selected folder is sent to {provider.label.split(" ·")[0]} for entity recognition. Unchanged notes are not re-sent; results are cached locally.
-                  {provider.free && " Free tiers have rate limits (large first syncs are slowed down automatically), and Google may use free-tier Gemini requests to improve its products."}
+                  {provider.free && " Free tiers have rate limits; a large first sync is slowed down automatically and unfinished notes continue on the next sync."}
+                  {cfg.provider.name === "gemini" && " Google may use free-tier Gemini requests to improve its products."}
                   {!provider.free && " You are billed by the provider per use."}
                 </span>
               </div>

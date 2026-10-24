@@ -25,7 +25,7 @@ BASE_URLS = {
 
 class OpenAICompatibleProvider(LLMProvider):
     def __init__(self, name: str, model: str, api_key: str | None, base_url: str = "",
-                 temperature: float = 0.0, timeout: float = 90.0, max_attempts: int = 4,
+                 temperature: float = 0.0, timeout: float = 90.0, max_attempts: int = 6,
                  transport: httpx.BaseTransport | None = None):
         self.name = name
         self.model = model
@@ -66,7 +66,8 @@ class OpenAICompatibleProvider(LLMProvider):
                     last = ProviderError(f"{self.name} returned HTTP {r.status_code}", retryable=True)
                     ra = r.headers.get("retry-after")
                     if ra and ra.replace(".", "", 1).isdigit():
-                        delay = max(delay, min(float(ra), 30.0))
+                        # free tiers (Groq, Gemini) reset per-minute quotas within a minute
+                        delay = max(delay, min(float(ra), 60.0))
                 else:
                     raise ProviderError(f"{self.name} returned HTTP {r.status_code}: {r.text[:300]}")
             if attempt < self.max_attempts:
