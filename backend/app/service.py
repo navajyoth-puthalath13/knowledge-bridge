@@ -49,7 +49,10 @@ class Service:
         self._health_cache: tuple[float, tuple[bool, str]] | None = None
         self.scheduler = threading.Thread(target=self._scheduler_loop, name="kb-scheduler", daemon=True)
         if self.cfg.vault() and not self.cfg.problems():
-            SyncEngine(self.db, self.cfg, make_connector(self.cfg), None).recover()
+            engine = SyncEngine(self.db, self.cfg, make_connector(self.cfg), None)
+            engine.adopt_vault()
+            engine.close_missing_copy_conflicts()
+            engine.recover()
         self._schedule_next(initial=True)
         self.scheduler.start()
 

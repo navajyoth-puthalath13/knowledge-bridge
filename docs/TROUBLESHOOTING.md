@@ -10,12 +10,12 @@ System Settings → Privacy & Security → Automation → enable *Notes* for Kno
 Setup → *Load folders* and pick the folder from the list. Paths are `Parent/Child` for nested folders. If the same folder name exists in two accounts, choose the one with the right account.
 
 **A note shows as a conflict**
-You edited its mirror in Obsidian, and the Apple Note changed too. Nothing was overwritten. In Sync history you can:
+You edited its copy in Obsidian, and the Apple Note changed too. Nothing was overwritten. (Missing copies are not conflicts; they are restored automatically.) In Sync history you can:
 - *Use Apple Notes version*: your Obsidian edit is saved to `Knowledge Bridge/Logs/backups/…` first.
 - *Keep Obsidian version*: the note stops syncing ("detached") until you choose *Re-attach* under Intelligence → Notes, which also backs up the Obsidian copy first.
 
 **I deleted a mirrored file in Obsidian**
-If the Apple Note later changes, you get a `deleted in obsidian` conflict. Choose *Use Apple Notes version* to restore it.
+The next sync restores it from Apple Notes (a warning in Sync history says so). Deleting a copy is never treated as a conflict, because restoring it cannot lose anything. To stop a note from syncing, move it out of the Apple Notes folder you selected.
 
 **A note is "locked"**
 Password-protected notes cannot be read through Notes' scripting interface and are skipped.

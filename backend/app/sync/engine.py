@@ -127,6 +127,18 @@ class SyncEngine:
         report.errors.append({"note": note, "note_id": note_id, "message": message, "kind": kind})
         report.stats.errors += 1
 
+    # ------------------------------------------------------------------ old conflicts
+    def close_missing_copy_conflicts(self) -> int:
+        """Close 'deleted in Obsidian' conflicts left by older versions; the next sync restores those copies."""
+        with self.db.tx() as c:
+            rows = c.execute("SELECT id, note_id FROM conflicts WHERE status='open' AND kind='deleted_in_obsidian'").fetchall()
+            for r in rows:
+                c.execute("UPDATE conflicts SET status='resolved', resolution='restore_missing_copy', resolved_at=?"
+                          " WHERE id=?", (now(), r["id"]))
+                c.execute("UPDATE notes SET status='active', modified_at=NULL, updated_at=? WHERE id=? AND status='conflict'",
+                          (now(), r["note_id"]))
+        return len(rows)
+
     # ------------------------------------------------------------------ vault changes
     def adopt_vault(self) -> bool:
         """Start the mirror afresh when the vault (or mirror folder) has changed.
@@ -218,9 +230,14 @@ class SyncEngine:
             report.plan.append({"note": title, "action": "skip", "detail": "detached: Obsidian copy is kept"})
             return
 
+        restored = False
         if row and current:
             disk = file_sha256(self.vault / current)
-            if disk != row["mirror_hash"] and disk is not None and row["source_hash"] == shash:
+            if disk is None:
+                # The copy is missing (deleted in Obsidian, moved, or never written to this vault).
+                # Writing it again from Apple Notes cannot destroy anything, so restore it.
+                restored, current = True, None
+            elif disk != row["mirror_hash"] and row["source_hash"] == shash:
                 # Edited in Obsidian, but nothing new from Apple Notes: leave it alone.
                 st.skipped += 1
                 report.plan.append({"note": title, "action": "skip", "path": current,
@@ -230,15 +247,15 @@ class SyncEngine:
                                           "message": "mirror was edited in Obsidian; it will be flagged as a conflict "
                                                      "if the Apple Note changes"})
                 return
-            if disk != row["mirror_hash"]:
-                kind = "deleted_in_obsidian" if disk is None else "edited_in_obsidian"
+            elif disk != row["mirror_hash"]:
+                kind = "edited_in_obsidian"
                 st.conflicts += 1
                 report.plan.append({"note": title, "action": "conflict", "path": current, "detail": kind})
                 if not dry:
                     self._open_conflict(sn.id, current, row["mirror_hash"], disk, render.text, kind)
                     self._err(report, title, f"conflict ({kind.replace('_', ' ')}); write stopped", "conflict", sn.id)
                 return
-            if row["source_hash"] == shash and current == desired and row["status"] == "active" \
+            elif row["source_hash"] == shash and current == desired and row["status"] == "active" \
                     and disk == sha256_text(render.text):
                 st.unchanged += 1
                 if not dry:
@@ -246,6 +263,9 @@ class SyncEngine:
                 return
 
         action = "create" if not current else ("rename" if current != desired else "update")
+        if restored:
+            report.errors.append({"note": title, "note_id": sn.id, "kind": "warning",
+                                  "message": "the copy in Obsidian was missing; restored it from Apple Notes"})
         report.plan.append({"note": title, "action": action, "path": desired,
                             **({"from": current} if action == "rename" else {}),
                             **({"warnings": render.warnings} if render.warnings else {})})
@@ -310,6 +330,7 @@ class SyncEngine:
         if not dry_run:
             ensure_structure(self.cfg)
             self.adopt_vault()
+            self.close_missing_copy_conflicts()
             self.recover()
             with self.db.tx() as c:
                 report.run_id = c.execute("INSERT INTO sync_runs(started_at, dry_run, trigger) VALUES (?,?,?)",

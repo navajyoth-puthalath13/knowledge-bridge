@@ -129,14 +129,34 @@ def test_obsidian_edit_without_source_change_is_left_alone(env):
     assert any("edited in Obsidian" in e["message"] for e in rep.errors)
 
 
-def test_deleted_mirror_is_a_conflict_not_silently_recreated(env):
+def test_deleted_copy_is_restored_from_apple_notes(env):
     env.sync()
+    env.mirror("Reading list").unlink()
+    rep = env.sync()
+    assert rep.stats.conflicts == 0 and env.mirror("Reading list").exists()
+    assert any("restored it from Apple Notes" in e["message"] for e in rep.errors)
+    # also when the Apple Note changed in the meantime
     env.mirror("Reading list").unlink()
     env.edit_source("reading-list", modified_at="2026-10-02T00:00:00Z",
                     html="<div><h1>Reading list</h1></div><div>New item</div>")
     rep = env.sync()
-    assert rep.stats.conflicts == 1
-    assert env.db.scalar("SELECT kind FROM conflicts") == "deleted_in_obsidian"
+    assert rep.stats.conflicts == 0 and "New item" in env.mirror("Reading list").read_text("utf-8")
+
+
+def test_old_deleted_conflicts_are_closed(env):
+    from app.storage.db import now
+
+    env.sync()
+    nid = env.db.scalar("SELECT id FROM notes WHERE title='Reading list'")
+    path = env.db.scalar("SELECT mirror_path FROM notes WHERE id=?", (nid,))
+    env.mirror("Reading list").unlink()
+    with env.db.tx() as c:  # state left by an older version
+        c.execute("INSERT INTO conflicts(note_id, mirror_path, incoming_text, kind, created_at) VALUES (?,?,?,?,?)",
+                  (nid, path, "x", "deleted_in_obsidian", now()))
+        c.execute("UPDATE notes SET status='conflict' WHERE id=?", (nid,))
+    rep = env.sync()
+    assert env.db.scalar("SELECT COUNT(*) FROM conflicts WHERE status='open'") == 0
+    assert rep.stats.conflicts == 0 and env.mirror("Reading list").exists()
 
 
 def test_interrupted_write_is_recovered(env, monkeypatch):
