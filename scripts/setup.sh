@@ -20,4 +20,10 @@ echo "→ Python environment ($("$PY" --version)) in backend/.venv"
 echo "→ Desktop app dependencies"
 (cd "$ROOT/apps/desktop" && npm install --no-audit --no-fund)
 
+# Newer npm versions can skip Electron's download step; fetch the binary if it is missing.
+if ! (cd "$ROOT/apps/desktop" && node -e "require('electron')" >/dev/null 2>&1); then
+  echo "→ Downloading the Electron app binary"
+  (cd "$ROOT/apps/desktop" && node node_modules/electron/install.js)
+fi
+
 echo "✓ Setup complete. Start the app with: scripts/dev.sh   (or build a Mac app with scripts/build-mac.sh)"
