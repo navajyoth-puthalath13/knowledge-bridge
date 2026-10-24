@@ -49,6 +49,9 @@ export function Dashboard({ status, backend, refresh, go }: AppCtx) {
           <button className="btn small" onClick={() => go("setup")}>Open setup</button>
         </div>
       )}
+      {status.notice && (
+        <div className="banner info"><strong>Vault updated</strong><span className="grow">{status.notice}</span></div>
+      )}
       {!blocked && status.vault.known_to_obsidian === false && (
         <div className="banner warn">
           <strong>Not an open Obsidian vault</strong>

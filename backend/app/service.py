@@ -16,7 +16,7 @@ from .entities.types import COLLECTION_TYPE, NOTE_TYPE
 from .intelligence.registry import ensure_collections
 from .obsidian.render import render_all
 from .obsidian.structure import ensure_structure
-from .obsidian.vaults import is_known
+from .obsidian.vaults import is_known, known_vaults
 from .obsidian.writer import ScopedWriter, file_sha256
 from .providers import make_provider
 from .security.secrets import get_secret, storage_backend
@@ -30,9 +30,11 @@ class Service:
     def __init__(self, data: Path | None = None):
         self.data = data or data_dir()
         self.cfg = load_config()
+        self.notice: str | None = None
         if self.cfg.fix_vault_container():
             save_config(self.cfg)
             log.info("vault folder corrected to %s", self.cfg.vault_path)
+        self._use_obsidians_vault()
         # Rules-only was the old default; with a Groq key available, use Groq (free tier).
         if self.cfg.provider.name == "none" and get_secret("groq"):
             self.cfg.provider.name = "groq"
@@ -56,6 +58,23 @@ class Service:
             engine.recover()
         self._schedule_next(initial=True)
         self.scheduler.start()
+
+    def _use_obsidians_vault(self) -> None:
+        """If Obsidian has never opened the configured vault, switch to the vault Obsidian has open.
+
+        Writing to a folder Obsidian does not know means nothing ever shows up there."""
+        v = self.cfg.vault()
+        if not v or is_known(v) is not False:
+            return
+        vaults = known_vaults() or []
+        candidates = [x for x in vaults if x["open"]] or (vaults if len(vaults) == 1 else [])
+        if len(candidates) != 1:
+            return
+        old, self.cfg.vault_path = v.name, candidates[0]["path"]
+        save_config(self.cfg)
+        self.notice = (f"Switched the vault from “{old}” (Obsidian has never opened it) to “{candidates[0]['name']}”, "
+                       "the vault open in Obsidian. Run Sync now to write your notes and pages there.")
+        log.info("vault switched to Obsidian's open vault: %s", self.cfg.vault_path)
 
     # ------------------------------------------------------------------ config
     def update_config(self, cfg: AppConfig) -> list[str]:
@@ -177,6 +196,7 @@ class Service:
                          "ORDER BY id DESC LIMIT 1")
         return {
             "version": __version__,
+            "notice": self.notice,
             "connector": {"ok": ok, "message": msg, "kind": self.cfg.source.kind,
                           "folder": self.cfg.source.folder or self.cfg.source.folder_path},
             "vault": {"ok": bool(v and v.is_dir()), "path": str(v) if v else None,

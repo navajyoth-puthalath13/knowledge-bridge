@@ -247,3 +247,25 @@ def test_obsidian_vault_list_and_warning(tmp_path, monkeypatch):
         cfg["vault_path"] = str(used)
         c.put("/config", json=cfg)
         assert c.get("/status").json()["vault"]["known_to_obsidian"] is True
+
+
+def test_unknown_vault_switches_to_obsidians_open_vault(tmp_path, monkeypatch):
+    import json
+
+    from app.config import AppConfig, SourceConfig, save_config
+    from app.service import Service
+
+    used = tmp_path / "Documents" / "Obsidian Vault"
+    (used / ".obsidian").mkdir(parents=True)
+    other = tmp_path / "iCloud" / "Navajyoth "
+    (other / ".obsidian").mkdir(parents=True)
+    conf = tmp_path / "obsidian.json"
+    conf.write_text(json.dumps({"vaults": {"a": {"path": str(used), "ts": 1, "open": True}}}))
+    monkeypatch.setenv("KB_OBSIDIAN_CONFIG", str(conf))
+    save_config(AppConfig(vault_path=str(other), source=SourceConfig(kind="folder", folder_path=str(FIXTURES / "notes"))))
+    s = Service()
+    try:
+        assert s.cfg.vault_path == str(used)
+        assert "Obsidian Vault" in s.status()["notice"]
+    finally:
+        s.shutdown()

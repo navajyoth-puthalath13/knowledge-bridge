@@ -68,6 +68,7 @@ export interface Report {
 
 export interface Status {
   version: string;
+  notice: string | null;
   connector: { ok: boolean; message: string; kind: string; folder: string };
   vault: { ok: boolean; path: string | null; mirror: string; generated: string; known_to_obsidian: boolean | null };
   provider: { name: string; model: string; cloud: boolean; free: boolean; key_set: boolean | null; key_storage: string; ready: boolean };
