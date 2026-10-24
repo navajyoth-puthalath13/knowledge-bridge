@@ -1,0 +1,92 @@
+{
+  "Design Matters — Debbie Millman with a product designer": {
+    "note_category": "podcast",
+    "entities": [
+      {"name": "Design Matters", "type": "podcast_show", "surface": "Design Matters",
+       "evidence": "Design Matters — Debbie Millman with a product designer", "confidence": 0.95},
+      {"name": "Design Matters: Debbie Millman with a product designer", "type": "podcast_episode",
+       "surface": "Design Matters — Debbie Millman with a product designer", "parent": "Design Matters",
+       "evidence": "Design Matters — Debbie Millman with a product designer", "confidence": 0.85, "primary_subject": true},
+      {"name": "Debbie Millman", "type": "person", "surface": "Debbie Millman",
+       "evidence": "Debbie Millman asked how she keeps doing deep work while leading a team.", "confidence": 0.95},
+      {"name": "Finding Flow", "type": "book", "surface": "Finding Flow",
+       "evidence": "Halfway through, the speaker mentioned Finding Flow and said it changed how she plans her week.",
+       "confidence": 0.9},
+      {"name": "Mihaly Csikszentmihalyi", "type": "person", "surface": "Csikszentmihalyi",
+       "evidence": "The author Mihaly Csikszentmihalyi was quoted.", "confidence": 0.9}
+    ],
+    "relations": [
+      {"source": "Debbie Millman", "target": "Design Matters", "type": "related_to", "label": "host of",
+       "evidence": "Debbie Millman asked how she keeps doing deep work while leading a team.", "confidence": 0.6}
+    ],
+    "related_notes": []
+  },
+  "Design Days 2026 — Day 2": {
+    "note_category": "event",
+    "entities": [
+      {"name": "Design Days", "type": "event_series", "surface": "Design Days",
+       "evidence": "Over lunch someone at Design Days recommended Finding Flow when we talked about burnout.", "confidence": 0.9},
+      {"name": "Design Days 2026", "type": "event", "surface": "Design Days 2026", "parent": "Design Days",
+       "evidence": "Design Days 2026 — Day 2", "confidence": 0.9, "primary_subject": true},
+      {"name": "Finding Flow", "type": "book", "surface": "Finding Flow",
+       "evidence": "Over lunch someone at Design Days recommended Finding Flow when we talked about burnout.",
+       "confidence": 0.9}
+    ],
+    "relations": [],
+    "related_notes": [
+      {"note_ref": "n1", "reason": "both mention Finding Flow", "evidence": "someone at Design Days recommended Finding Flow",
+       "confidence": 0.7}
+    ]
+  },
+  "Engagement and difficult problems": {
+    "note_category": "personal",
+    "entities": [],
+    "relations": [],
+    "related_notes": []
+  },
+  "Friends of Figma Kochi — March meetup": {
+    "note_category": "event",
+    "entities": [
+      {"name": "Friends of Figma", "type": "event_series", "surface": "Friends of Figma",
+       "evidence": "Friends of Figma Kochi — March meetup", "confidence": 0.9},
+      {"name": "Friends of Figma Kochi — March meetup", "type": "event", "surface": "Friends of Figma Kochi — March meetup",
+       "parent": "Friends of Figma", "evidence": "Friends of Figma Kochi — March meetup", "confidence": 0.85,
+       "primary_subject": true},
+      {"name": "Finding Flow: The Psychology of Engagement with Everyday Life", "type": "book",
+       "surface": "finding flow: the psychology of engagement with everyday life",
+       "evidence": "Someone brought up finding flow: the psychology of engagement with everyday life during Q&A.",
+       "confidence": 0.85},
+      {"name": "Alex", "type": "person", "surface": "Alex", "evidence": "Alex gave a short talk on variables.",
+       "confidence": 0.6, "ambiguous": true},
+      {"name": "After Office Hours", "type": "event_series", "surface": "After Office Hours",
+       "evidence": "Next meetup is at After Office Hours.", "confidence": 0.85}
+    ],
+    "relations": [],
+    "related_notes": []
+  },
+  "Reading list": {
+    "note_category": "other",
+    "entities": [
+      {"name": "Flow", "type": "book", "surface": "Flow", "evidence": "Flow keeps coming up.", "confidence": 0.5,
+       "ambiguous": true},
+      {"name": "The Design of Everyday Things", "type": "book", "surface": "The Design of Everyday Things",
+       "evidence": "Also want to reread The Design of Everyday Things by Don Norman.", "confidence": 0.95},
+      {"name": "Don Norman", "type": "person", "surface": "Don Norman",
+       "evidence": "Also want to reread The Design of Everyday Things by Don Norman.", "confidence": 0.95}
+    ],
+    "relations": [
+      {"source": "Don Norman", "target": "The Design of Everyday Things", "type": "related_to", "label": "author of",
+       "evidence": "Also want to reread The Design of Everyday Things by Don Norman.", "confidence": 0.95}
+    ],
+    "related_notes": []
+  },
+  "Workshop notes — rich text": {
+    "note_category": "event",
+    "entities": [
+      {"name": "Priya", "type": "person", "surface": "Priya", "evidence": "Tokens Priya", "confidence": 0.5,
+       "ambiguous": true}
+    ],
+    "relations": [],
+    "related_notes": []
+  }
+}

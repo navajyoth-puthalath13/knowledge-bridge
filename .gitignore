@@ -1,0 +1,46 @@
+# --- secrets & local configuration (never commit) ---
+.env
+.env.*
+*.key
+secrets.json
+config.local.json
+
+# --- personal data: databases, notes, generated knowledge ---
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-journal
+*-wal
+*-shm
+data/
+vault/
+*.vault/
+Knowledge Bridge/
+Apple Notes/
+logs/
+*.log
+
+# --- python ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+
+# --- node / electron ---
+node_modules/
+dist/
+dist-electron/
+release/
+out/
+*.tsbuildinfo
+
+# --- os / editors ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
