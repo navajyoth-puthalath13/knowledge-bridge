@@ -63,6 +63,13 @@ export function Setup({ status, refresh, sub }: AppCtx) {
         </div>
       )}
 
+      {!dirty && status && status.problems.length > 0 && (
+        <div className="banner warn">
+          <strong>Still needed</strong>
+          <span className="grow">{status.problems.map((p) => <div key={p}>{p}</div>)}</span>
+        </div>
+      )}
+
       <section className="panel">
         <h2>Apple Notes source</h2>
         <div className="field">
@@ -132,6 +139,7 @@ export function Setup({ status, refresh, sub }: AppCtx) {
               <input type="text" placeholder="/Users/you/Documents/Vault" value={cfg.vault_path} onChange={(e) => set((c) => { c.vault_path = e.target.value; })} />
               <button className="btn" onClick={() => pick("Choose your Obsidian vault", (c, p) => { c.vault_path = p; })}>Browse…</button>
             </div>
+            <div className="hint">Choose the vault folder itself. For iCloud vaults: iCloud Drive › Obsidian › <em>your vault name</em>.</div>
           </div>
         </div>
         <div className="field">

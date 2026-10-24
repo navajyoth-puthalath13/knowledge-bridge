@@ -58,7 +58,7 @@ def test_full_sync_into_temp_vault(conn, tmp_path):
     from app.storage.db import Database
     from app.sync.engine import SyncEngine
 
-    (tmp_path / "vault").mkdir()
+    (tmp_path / "vault" / ".obsidian").mkdir(parents=True)  # a real vault has .obsidian/
     cfg = AppConfig(vault_path=str(tmp_path / "vault"), source=SourceConfig(account=ACCOUNT, folder=FOLDER))
     db = Database(tmp_path / "kb.sqlite3")
     ensure_collections(db)

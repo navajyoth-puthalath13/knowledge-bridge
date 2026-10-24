@@ -97,10 +97,10 @@ class SyncEngine:
         return str(Path(vault_rel).relative_to(self.cfg.mirror_dir))
 
     def _subfolder(self, s: NoteSummary) -> str:
-        base = self.cfg.source.folder.strip("/")
+        """Mirror the Apple Notes folder structure: Apple Notes/<Notes folder>/<subfolder>/<note>.md"""
         f = (s.folder or "").strip("/")
-        if self.cfg.source.kind == "apple_notes" and base and f.startswith(base + "/"):
-            return "/".join(safe_filename(p) for p in f[len(base) + 1:].split("/"))
+        if self.cfg.source.kind == "apple_notes":
+            return "/".join(safe_filename(p) for p in (f or self.cfg.source.folder.strip("/")).split("/") if p)
         if self.cfg.source.kind == "folder" and f:
             return "/".join(safe_filename(p) for p in f.split("/"))
         return ""

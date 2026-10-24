@@ -18,7 +18,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("KB_MOCK_RESPONSES", str(FIXTURES / "mock_responses.json"))
     src = tmp_path / "src"
     shutil.copytree(FIXTURES / "notes", src)
-    (tmp_path / "vault").mkdir()
+    (tmp_path / "vault" / ".obsidian").mkdir(parents=True)  # a real vault has .obsidian/
     app = create_app(TOKEN)
     with TestClient(app, headers={"Authorization": f"Bearer {TOKEN}"}) as c:
         cfg = c.get("/config").json()
@@ -178,7 +178,7 @@ def test_saving_setup_creates_vault_folders(tmp_path):
 
     src = tmp_path / "src"
     shutil.copytree(FIXTURES / "notes", src)
-    (tmp_path / "vault").mkdir()
+    (tmp_path / "vault" / ".obsidian").mkdir(parents=True)  # a real vault has .obsidian/
     with TestClient(create_app(TOKEN), headers={"Authorization": f"Bearer {TOKEN}"}) as c:
         cfg = c.get("/config").json()
         assert cfg["provider"]["name"] == "groq"  # free tier is the default

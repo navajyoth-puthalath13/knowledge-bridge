@@ -98,6 +98,7 @@ def test_scoped_writer_refuses_escape(tmp_path):
 def test_config_rejects_nested_output_folders(tmp_path):
     from app.config import AppConfig, SourceConfig
 
+    (tmp_path / ".obsidian").mkdir()
     cfg = AppConfig(vault_path=str(tmp_path), mirror_dir="Notes", generated_dir="Notes/KB",
                     source=SourceConfig(kind="folder", folder_path=str(tmp_path)))
     assert any("must not contain" in p for p in cfg.problems())

@@ -24,7 +24,7 @@ const src = path.join(tmp, "notes");
 const vault = path.join(tmp, "Vault");
 const data = path.join(tmp, "data");
 fs.cpSync(path.join(repo, "fixtures", "notes"), src, { recursive: true });
-fs.mkdirSync(vault);
+fs.mkdirSync(path.join(vault, ".obsidian"), { recursive: true }); // a real vault has .obsidian/
 fs.mkdirSync(data);
 // Only the provider is pre-seeded (the mock provider is not offered in the UI); everything else is set through Setup.
 fs.writeFileSync(path.join(data, "config.json"), JSON.stringify({ provider: { name: "mock" } }));

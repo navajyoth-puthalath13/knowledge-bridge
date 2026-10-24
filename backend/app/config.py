@@ -135,6 +135,12 @@ class AppConfig(BaseModel):
             out.append("Obsidian vault is not selected.")
         elif not v.is_dir():
             out.append(f"Obsidian vault folder does not exist: {v}")
+        elif not (v / ".obsidian").is_dir():
+            # e.g. iCloud Drive › Obsidian (".../iCloud~md~obsidian/Documents") holds vaults but is not one
+            inside = sorted(p.name for p in v.iterdir() if (p / ".obsidian").is_dir()) if v.is_dir() else []
+            hint = (f" It contains these vaults: {', '.join(inside)}. Choose one of them." if inside
+                    else " Choose the folder you open as a vault in Obsidian.")
+            out.append(f"“{v.name}” is not an Obsidian vault (it has no .obsidian folder).{hint}")
         else:
             m, g = Path(self.mirror_dir).parts, Path(self.generated_dir).parts
             if m[: len(g)] == g or g[: len(m)] == m:

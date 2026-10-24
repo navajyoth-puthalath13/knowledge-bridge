@@ -4,6 +4,7 @@ The mirror body is a deterministic conversion of the HTML that Notes.app exposes
 
 | Apple Notes feature | Mirror | Notes |
 | --- | --- | --- |
+| Folders | Same structure as Apple Notes: `Apple Notes/<Notes folder>/<subfolder>/<note>.md` | Subfolders need *Include subfolders* |
 | Title (first line) | Kept as the first line of the body (usually `# Title`) | Also used as the file name |
 | Paragraphs / line breaks | Preserved line by line | Several consecutive empty lines collapse to one (Markdown renders them the same) |
 | Title / Heading / Subheading | `#`, `##`, `###` | |

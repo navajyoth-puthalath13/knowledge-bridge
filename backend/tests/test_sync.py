@@ -225,9 +225,12 @@ def test_apple_notes_subfolders_map_to_mirror_subfolders(env):
     env.cfg.source.kind = "apple_notes"
     env.cfg.source.folder = "Knowledge"
     eng = env.engine()
-    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge")) == ""
-    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Podcasts/2026")) == "Podcasts/2026"
-    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Talks: Q&A")) == "Talks Q&A"
+    # the mirror keeps the same folder structure as Apple Notes, starting with the selected folder
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge")) == "Knowledge"
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Podcasts/2026")) == "Knowledge/Podcasts/2026"
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Talks: Q&A")) == "Knowledge/Talks Q&A"
+    assert eng._desired_path("a", "Podcast with Dr. Gio Valiante", "Know-l-edge", None) == \
+        "Apple Notes/Know-l-edge/Podcast with Dr. Gio Valiante.md"
 
 
 def test_vault_structure_created_before_first_sync(env):
@@ -251,3 +254,16 @@ def test_long_notes_are_trimmed_for_analysis(env):
     rep = env.sync()
     assert any("only the first" in e["message"] for e in rep.errors)
     assert len(env.mirror("Reading list").read_text("utf-8")) > pipeline.MAX_ANALYSIS_CHARS  # mirror is complete
+
+
+def test_vaults_container_is_rejected(tmp_path):
+    from app.config import AppConfig, SourceConfig
+
+    docs = tmp_path / "iCloud~md~obsidian" / "Documents"
+    (docs / "Obsidian Vault" / ".obsidian").mkdir(parents=True)
+    (docs / "KB Test" / ".obsidian").mkdir(parents=True)
+    cfg = AppConfig(vault_path=str(docs), source=SourceConfig(kind="folder", folder_path=str(tmp_path)))
+    msg = " ".join(cfg.problems())
+    assert "not an Obsidian vault" in msg and "KB Test, Obsidian Vault" in msg
+    cfg.vault_path = str(docs / "Obsidian Vault")
+    assert cfg.problems() == []

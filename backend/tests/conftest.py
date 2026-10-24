@@ -36,7 +36,7 @@ class Env:
         self.src = tmp / "source"
         shutil.copytree(FIXTURES / "notes", self.src)
         self.vault = tmp / "vault"
-        self.vault.mkdir()
+        (self.vault / ".obsidian").mkdir(parents=True)  # a real vault has .obsidian/
         self.cfg = AppConfig(vault_path=str(self.vault), source=SourceConfig(kind="folder", folder_path=str(self.src)))
         self.db = Database(tmp / "kb.sqlite3")
         ensure_collections(self.db)
