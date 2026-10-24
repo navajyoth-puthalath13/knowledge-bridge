@@ -219,3 +219,31 @@ def test_saving_the_icloud_container_picks_the_vault(tmp_path):
         assert c.get("/config").json()["vault_path"] == str(docs / "Navajyoth")
         assert (docs / "Navajyoth" / "Knowledge Bridge" / "Collections").is_dir()
         assert not (docs / "Knowledge Bridge").exists()
+
+
+def test_obsidian_vault_list_and_warning(tmp_path, monkeypatch):
+    import json
+    import shutil
+
+    from app.main import create_app
+
+    used = tmp_path / "Obsidian Vault"
+    (used / ".obsidian").mkdir(parents=True)
+    other = tmp_path / "Navajyoth "
+    (other / ".obsidian").mkdir(parents=True)
+    conf = tmp_path / "obsidian.json"
+    conf.write_text(json.dumps({"vaults": {"a": {"path": str(used), "ts": 1, "open": True},
+                                           "gone": {"path": str(tmp_path / "deleted"), "ts": 2}}}))
+    monkeypatch.setenv("KB_OBSIDIAN_CONFIG", str(conf))
+    src = tmp_path / "src"
+    shutil.copytree(FIXTURES / "notes", src)
+    with TestClient(create_app(TOKEN), headers={"Authorization": f"Bearer {TOKEN}"}) as c:
+        assert c.get("/obsidian/vaults").json()["vaults"] == [{"name": "Obsidian Vault", "path": str(used), "open": True}]
+        cfg = c.get("/config").json()
+        cfg["vault_path"] = str(other)
+        cfg["source"].update(kind="folder", folder_path=str(src))
+        c.put("/config", json=cfg)
+        assert c.get("/status").json()["vault"]["known_to_obsidian"] is False
+        cfg["vault_path"] = str(used)
+        c.put("/config", json=cfg)
+        assert c.get("/status").json()["vault"]["known_to_obsidian"] is True

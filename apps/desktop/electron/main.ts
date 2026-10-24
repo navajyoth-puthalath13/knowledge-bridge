@@ -5,7 +5,7 @@ import { Backend, resolveBackendDir } from "./backend";
 
 // Only these API paths can be reached from the renderer.
 const ALLOWED = [
-  /^\/status$/, /^\/config$/, /^\/secrets\/(gemini|groq|openai|xai)$/, /^\/provider\/(test|models)$/, /^\/source\/folders$/,
+  /^\/status$/, /^\/config$/, /^\/secrets\/(gemini|groq|openai|xai)$/, /^\/provider\/(test|models)$/, /^\/obsidian\/vaults$/, /^\/source\/folders$/,
   /^\/sync(\/cancel)?$/, /^\/automation$/, /^\/rebuild$/, /^\/runs(\?limit=\d+)?$/, /^\/notes$/,
   /^\/notes\/reprocess$/, /^\/notes\/[^?#]+\/reattach$/, /^\/entity-types(\/\w+)?$/,
   /^\/entities(\?[\w=&%.\-+]*)?$/, /^\/entities\/[\w-]+(\/merge)?$/, /^\/relationships(\?[\w=&%.\-]*)?$/,

@@ -49,6 +49,13 @@ export function Dashboard({ status, backend, refresh, go }: AppCtx) {
           <button className="btn small" onClick={() => go("setup")}>Open setup</button>
         </div>
       )}
+      {!blocked && status.vault.known_to_obsidian === false && (
+        <div className="banner warn">
+          <strong>Not an open Obsidian vault</strong>
+          <span className="grow">Pages are written to “{status.vault.path?.split("/").pop()}”, but Obsidian has never opened that folder, so nothing shows up in Obsidian. Choose the vault you use in Setup, or open this folder in Obsidian with <em>Open folder as vault</em>.</span>
+          <button className="btn small" onClick={() => go("setup")}>Choose vault</button>
+        </div>
+      )}
       {counts.conflicts > 0 && (
         <div className="banner err">
           <strong>{counts.conflicts} conflict{counts.conflicts > 1 ? "s" : ""}</strong>

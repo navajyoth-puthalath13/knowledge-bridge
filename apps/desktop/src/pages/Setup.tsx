@@ -23,6 +23,8 @@ export function Setup({ status, refresh, sub }: AppCtx) {
   const [login, setLogin] = useState<{ supported: boolean; enabled: boolean }>({ supported: false, enabled: false });
   const [test, setTest] = useState<{ ok: boolean; message: string } | null>(null);
   const [models, setModels] = useState<string[] | null>(null);
+  const [vaults, setVaults] = useState<Array<{ name: string; path: string; open: boolean }> | null>(null);
+  useEffect(() => { void get<{ vaults: typeof vaults }>("/obsidian/vaults").then((r) => setVaults(r.vaults)).catch(() => setVaults(null)); }, []);
   const { busy, run } = useAction();
   const toast = useToast();
 
@@ -135,6 +137,18 @@ export function Setup({ status, refresh, sub }: AppCtx) {
         <div className="field">
           <label>Vault</label>
           <div>
+            {vaults && vaults.length > 0 && (
+              <select style={{ marginBottom: 6 }} value={vaults.some((v) => v.path === cfg.vault_path) ? cfg.vault_path : ""}
+                      onChange={(e) => e.target.value && set((c) => { c.vault_path = e.target.value; })}>
+                <option value="">Choose one of your Obsidian vaults…</option>
+                {vaults.map((v) => <option key={v.path} value={v.path}>{v.name}{v.open ? " (open in Obsidian now)" : ""}</option>)}
+              </select>
+            )}
+            {cfg.vault_path && vaults && !vaults.some((v) => v.path === cfg.vault_path) && (
+              <div className="banner warn" style={{ marginBottom: 6 }}>
+                <span className="grow">Obsidian has never opened this folder, so you will not see the pages there. Pick one of your vaults above, or in Obsidian use <strong>Open folder as vault</strong> on this folder.</span>
+              </div>
+            )}
             <div className="input-row">
               <input type="text" placeholder="/Users/you/Documents/Vault" value={cfg.vault_path} onChange={(e) => set((c) => { c.vault_path = e.target.value; })} />
               <button className="btn" onClick={() => pick("Choose your Obsidian vault", (c, p) => { c.vault_path = p; })}>Browse…</button>

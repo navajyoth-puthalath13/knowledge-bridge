@@ -16,6 +16,7 @@ from .entities.types import COLLECTION_TYPE, NOTE_TYPE
 from .intelligence.registry import ensure_collections
 from .obsidian.render import render_all
 from .obsidian.structure import ensure_structure
+from .obsidian.vaults import is_known
 from .obsidian.writer import ScopedWriter, file_sha256
 from .providers import make_provider
 from .security.secrets import get_secret, storage_backend
@@ -179,7 +180,9 @@ class Service:
             "connector": {"ok": ok, "message": msg, "kind": self.cfg.source.kind,
                           "folder": self.cfg.source.folder or self.cfg.source.folder_path},
             "vault": {"ok": bool(v and v.is_dir()), "path": str(v) if v else None,
-                      "mirror": self.cfg.mirror_dir, "generated": self.cfg.generated_dir},
+                      "mirror": self.cfg.mirror_dir, "generated": self.cfg.generated_dir,
+                      # False = Obsidian has never opened this folder, so the pages will not show up there
+                      "known_to_obsidian": is_known(v) if v and v.is_dir() else None},
             "provider": self.provider_status(),
             "problems": self.cfg.problems(),
             "counts": {

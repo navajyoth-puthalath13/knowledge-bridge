@@ -79,6 +79,13 @@ def provider_models(request: Request):
         raise HTTPException(502, str(e))
 
 
+@router.get("/obsidian/vaults")
+def obsidian_vaults():
+    from ..obsidian.vaults import known_vaults
+
+    return {"vaults": known_vaults()}
+
+
 @router.get("/source/folders")
 def source_folders(request: Request):
     try:
