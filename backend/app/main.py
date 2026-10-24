@@ -18,6 +18,7 @@ from fastapi import FastAPI
 
 from .api.routes import router
 from .config import data_dir
+from .security import dotenv
 from .security.auth import TokenAuthMiddleware
 from .service import Service
 
@@ -58,7 +59,10 @@ def main() -> None:
         token = secrets.token_urlsafe(32)
         print("KB_TOKEN not set; generated a one-off token (only useful for manual testing):", token, file=sys.stderr)
     setup_logging()
-    logging.getLogger(__name__).info("starting Knowledge Bridge service on 127.0.0.1:%d", args.port)
+    log = logging.getLogger(__name__)
+    for f in dotenv.load():  # local, git-ignored API keys (e.g. GROQ_API_KEY)
+        log.info("loaded API keys from %s", f)
+    log.info("starting Knowledge Bridge service on 127.0.0.1:%d", args.port)
     # uvicorn handles SIGINT/SIGTERM and runs the lifespan shutdown (graceful stop of the sync job)
     uvicorn.run(create_app(token), host="127.0.0.1", port=args.port, log_level="warning")
 

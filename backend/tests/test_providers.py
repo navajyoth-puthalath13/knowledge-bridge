@@ -149,3 +149,27 @@ def test_free_cloud_providers(name, url, model):
     p._client = httpx.Client(transport=httpx.MockTransport(h))
     p.complete_json("s", "u")
     assert seen == {"url": url, "auth": f"Bearer {name}-key"}
+
+
+def test_dotenv_file_supplies_keys(tmp_path, monkeypatch):
+    from app.security import dotenv
+
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    f = tmp_path / ".env"
+    f.write_text('# comment\nGROQ_API_KEY="gsk_test"\nexport GEMINI_API_KEY=abc\n')
+    monkeypatch.setenv("GEMINI_API_KEY", "already-set")
+    assert dotenv.load([f]) == [f]
+    assert get_secret("groq") == "gsk_test"
+    assert get_secret("gemini") == "already-set"  # real environment wins
+    monkeypatch.delenv("GROQ_API_KEY")
+
+
+def test_env_file_is_git_ignored():
+    import subprocess
+
+    from .conftest import REPO
+
+    r = subprocess.run(["git", "check-ignore", "-q", str(REPO / ".env")], cwd=REPO)
+    assert r.returncode == 0, ".env must be ignored by git"
+    r = subprocess.run(["git", "check-ignore", "-q", str(REPO / ".env.example")], cwd=REPO)
+    assert r.returncode == 1, ".env.example should be tracked"

@@ -33,7 +33,7 @@ Everything is set in the app (**Setup** and **Intelligence → Entity types**). 
 | `KB_DATA_DIR` | service | Override the data folder (tests use this) |
 | `KB_TOKEN` | service | Per-session API token; set by Electron |
 | `KB_PORT` | service | Port when run by hand (default 8765) |
-| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY` | service | Override the Keychain |
+| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY` | service | Override the Keychain. Can also be set in a git-ignored `.env` file in the repository root (see `.env.example`). |
 | `KB_DISABLE_KEYRING` | service | Use the 0600 file fallback instead of the Keychain |
 | `KB_MOCK_RESPONSES` | service | JSON of canned responses for provider `mock` (tests) |
 | `KB_BACKEND_DIR`, `KB_PYTHON` | Electron | Override where the service is started from |

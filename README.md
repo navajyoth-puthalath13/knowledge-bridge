@@ -30,6 +30,8 @@ scripts/dev.sh                        # launch the app from source
 scripts/build-mac.sh --install        # or: build "Knowledge Bridge.app" into /Applications
 ```
 
+**API key (optional shortcut):** copy `.env.example` to `.env` in the repository folder and put your key in it, e.g. `GROQ_API_KEY=gsk_…`. `.env` is git-ignored and never uploaded. You can also paste the key in Setup, which stores it in the macOS Keychain.
+
 In the app:
 
 1. **Setup** → *Load folders* → pick your Apple Notes folder. Choose your Obsidian vault. Pick an AI provider, save an API key if needed, then press *Test connection*. Free options: **Ollama** (runs on your Mac), **Google Gemini** free tier, **Groq** free tier. OpenAI and xAI are supported but paid.

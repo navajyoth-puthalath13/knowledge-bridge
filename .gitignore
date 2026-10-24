@@ -1,6 +1,7 @@
 # --- secrets & local configuration (never commit) ---
 .env
 .env.*
+!.env.example
 *.key
 secrets.json
 config.local.json
