@@ -1,6 +1,6 @@
-"""OpenAI-compatible chat completions client (OpenAI, xAI Grok, Ollama).
+"""OpenAI-compatible chat completions client (Ollama, Google Gemini, Groq, OpenAI, xAI).
 
-All three expose POST {base}/chat/completions with the same request shape, so
+All of them expose POST {base}/chat/completions with the same request shape, so
 one client covers them; only the base URL, key and default model differ.
 """
 from __future__ import annotations
@@ -15,6 +15,8 @@ from .base import LLMProvider, ProviderError
 log = logging.getLogger(__name__)
 
 BASE_URLS = {
+    "gemini": "https://generativelanguage.googleapis.com/v1beta/openai",  # free tier
+    "groq": "https://api.groq.com/openai/v1",  # free tier
     "openai": "https://api.openai.com/v1",
     "xai": "https://api.x.ai/v1",
     "ollama": "http://127.0.0.1:11434/v1",
@@ -31,7 +33,7 @@ class OpenAICompatibleProvider(LLMProvider):
         self.base_url = (base_url or BASE_URLS[name]).rstrip("/")
         self.temperature = temperature
         self.max_attempts = max_attempts
-        self.sends_data_off_device = name in ("openai", "xai")
+        self.sends_data_off_device = name != "ollama"
         self._client = httpx.Client(timeout=timeout, transport=transport)
         self._sleep = time.sleep
 

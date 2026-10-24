@@ -33,7 +33,10 @@ def data_dir() -> Path:
     return p
 
 
-ProviderName = Literal["none", "openai", "xai", "ollama", "mock"]
+ProviderName = Literal["none", "ollama", "gemini", "groq", "openai", "xai", "mock"]
+# Cloud providers need an API key. gemini and groq have free tiers; openai and xai are paid.
+CLOUD_PROVIDERS = ("gemini", "groq", "openai", "xai")
+FREE_PROVIDERS = ("none", "ollama", "gemini", "groq")
 
 
 class ProviderConfig(BaseModel):
@@ -48,10 +51,11 @@ class ProviderConfig(BaseModel):
     def resolved_model(self) -> str:
         if self.model:
             return self.model
-        return {"openai": "gpt-4.1-mini", "xai": "grok-3-mini", "ollama": "llama3.1:8b", "mock": "mock-1"}.get(self.name, "")
+        return {"ollama": "llama3.1:8b", "gemini": "gemini-2.5-flash", "groq": "llama-3.3-70b-versatile",
+                "openai": "gpt-4.1-mini", "xai": "grok-3-mini", "mock": "mock-1"}.get(self.name, "")
 
     def is_cloud(self) -> bool:
-        return self.name in ("openai", "xai")
+        return self.name in CLOUD_PROVIDERS
 
 
 class SourceConfig(BaseModel):

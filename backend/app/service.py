@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from . import __version__
-from .config import AppConfig, data_dir, load_config, save_config
+from .config import CLOUD_PROVIDERS, FREE_PROVIDERS, AppConfig, data_dir, load_config, save_config
 from .connectors import ConnectorError, make_connector
 from .connectors.apple_notes import AppleNotesConnector
 from .entities.types import COLLECTION_TYPE, NOTE_TYPE
@@ -137,8 +137,8 @@ class Service:
 
     def provider_status(self) -> dict:
         p = self.cfg.provider
-        key_needed = p.name in ("openai", "xai")
-        return {"name": p.name, "model": p.resolved_model(), "cloud": p.is_cloud(),
+        key_needed = p.name in CLOUD_PROVIDERS
+        return {"name": p.name, "model": p.resolved_model(), "cloud": p.is_cloud(), "free": p.name in FREE_PROVIDERS,
                 "key_set": bool(get_secret(p.name)) if key_needed else None,
                 "key_storage": storage_backend(),
                 "ready": p.name in ("none", "mock", "ollama") or bool(get_secret(p.name))}

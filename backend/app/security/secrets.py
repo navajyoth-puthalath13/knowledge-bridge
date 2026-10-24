@@ -2,7 +2,7 @@
 
 Keys go to the macOS Keychain (via `keyring`), never to the repository, the
 vault or config.json. Environment variables (OPENAI_API_KEY, XAI_API_KEY) are
-honoured as an override. On systems without a keyring backend (Linux CI), a
+honoured as an override (also GEMINI_API_KEY, GROQ_API_KEY). On systems without a keyring backend (Linux CI), a
 0600-permission file in the data directory is used as a fallback.
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from ..config import data_dir
 
 log = logging.getLogger(__name__)
 SERVICE = "Knowledge Bridge"
-ENV = {"openai": "OPENAI_API_KEY", "xai": "XAI_API_KEY"}
+ENV = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY", "openai": "OPENAI_API_KEY", "xai": "XAI_API_KEY"}
 
 
 def _keyring():

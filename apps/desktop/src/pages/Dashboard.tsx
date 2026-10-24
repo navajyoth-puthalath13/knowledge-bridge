@@ -102,7 +102,7 @@ export function Dashboard({ status, backend, refresh, go }: AppCtx) {
 }
 
 export function providerLabel(name: string) {
-  return { openai: "OpenAI", xai: "xAI Grok", ollama: "Ollama", mock: "Mock", none: "Rules only" }[name] ?? name;
+  return { gemini: "Google Gemini", groq: "Groq", openai: "OpenAI", xai: "xAI Grok", ollama: "Ollama", mock: "Mock", none: "Rules only" }[name] ?? name;
 }
 
 function StatusCard({ label, ok, warn, value, detail }: { label: string; ok: boolean; warn?: boolean; value: string; detail: string }) {

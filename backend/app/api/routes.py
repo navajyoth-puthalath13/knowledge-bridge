@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from .. import __version__
-from ..config import AppConfig
+from ..config import CLOUD_PROVIDERS, AppConfig
 from ..connectors import ConnectorError
 from ..entities.types import COLLECTION_TYPE, ENTITY_TYPES, NOTE_TYPE
 from ..intelligence import registry as reg
@@ -57,7 +57,7 @@ class SecretIn(BaseModel):
 
 @router.put("/secrets/{provider}")
 def put_secret(provider: str, body: SecretIn, request: Request):
-    if provider not in ("openai", "xai"):
+    if provider not in CLOUD_PROVIDERS:
         raise HTTPException(400, "unknown provider")
     set_secret(provider, (body.value or "").strip() or None)
     return svc(request).provider_status()

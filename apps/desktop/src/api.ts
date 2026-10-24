@@ -70,7 +70,7 @@ export interface Status {
   version: string;
   connector: { ok: boolean; message: string; kind: string; folder: string };
   vault: { ok: boolean; path: string | null; mirror: string; generated: string };
-  provider: { name: string; model: string; cloud: boolean; key_set: boolean | null; key_storage: string; ready: boolean };
+  provider: { name: string; model: string; cloud: boolean; free: boolean; key_set: boolean | null; key_storage: string; ready: boolean };
   problems: string[];
   counts: { notes: number; notes_total: number; entities: number; relationships: number; reviews: number; conflicts: number; errors: number };
   last_sync: { finished_at: string; status: string } | null;
@@ -85,7 +85,7 @@ export interface Config {
   generated_dir: string;
   obsidian_vault_name: string;
   source: { kind: "apple_notes" | "folder"; account: string; folder: string; include_subfolders: boolean; folder_path: string; export_attachments: boolean };
-  provider: { name: "none" | "openai" | "xai" | "ollama" | "mock"; model: string; base_url: string; temperature: number; timeout_seconds: number };
+  provider: { name: "none" | "ollama" | "gemini" | "groq" | "openai" | "xai" | "mock"; model: string; base_url: string; temperature: number; timeout_seconds: number };
   intelligence: { auto_accept_confidence: number; fuzzy_auto_merge: number; fuzzy_review: number; semantic_suggestions: boolean; semantic_auto_accept: boolean; enabled_types: Record<string, boolean> };
   sync_interval_minutes: number;
   automation_enabled: boolean;

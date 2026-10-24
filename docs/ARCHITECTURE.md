@@ -37,7 +37,7 @@
 | `intelligence/registry.py` | Canonical entities, aliases, exact and fuzzy matching, merges, structural collection links, decisions. |
 | `intelligence/reviews.py` | Applies review-queue decisions and records them so reprocessing never asks again. |
 | `obsidian/render.py` | Rebuilds every generated page from the registry. Only changed files are written; edited pages are backed up before being overwritten. |
-| `providers/` | One OpenAI-compatible client for OpenAI, xAI and Ollama, with retries and backoff, plus a deterministic mock. |
+| `providers/` | One OpenAI-compatible client for Ollama, Google Gemini, Groq, OpenAI and xAI, with retries and backoff, plus a deterministic mock. |
 | `security/` | Token and Host-header middleware; Keychain-backed secrets. |
 | `entities/types.py` | The entity type table. Adding a type is one entry here. |
 
@@ -84,5 +84,5 @@
 - **Source notes are graph nodes as they are.** Entity pages link *to* the mirror files. Graph View shows note ← book → note without touching the notes. Two notes are linked directly only by explicit evidence (a `references` rule) or an approved suggestion. Those links are shown on a generated *connections* page, never in the note.
 - **Personal reflections** get a small page under `Entities/Personal Thinking/` that links to the note and the collection, so the collection stays a clean index.
 - **The renderer is a pure function of the registry.** It always re-renders everything but writes only changed files. This is simpler and safer than incremental page patching.
-- **One OpenAI-compatible client** covers OpenAI, xAI and Ollama. Adding Anthropic or another API means one new `LLMProvider` subclass.
+- **One OpenAI-compatible client** covers Ollama, Gemini, Groq, OpenAI and xAI. Adding Anthropic or another API means one new `LLMProvider` subclass.
 - **Rules-only mode** is a real offline option: it recognises entities you've already confirmed but cannot discover new ones.

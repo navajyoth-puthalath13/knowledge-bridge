@@ -3,12 +3,16 @@ import { Config, get, post, put } from "../api";
 import type { AppCtx } from "../App";
 import { useAction, useLoad, useToast } from "../ui";
 
-const PROVIDERS: Array<{ key: Config["provider"]["name"]; label: string; local: boolean; placeholder: string }> = [
-  { key: "none", label: "Rules only", local: true, placeholder: "" },
-  { key: "ollama", label: "Ollama (local)", local: true, placeholder: "llama3.1:8b" },
-  { key: "openai", label: "OpenAI", local: false, placeholder: "gpt-4.1-mini" },
-  { key: "xai", label: "xAI Grok", local: false, placeholder: "grok-3-mini" },
+type ProviderKey = Config["provider"]["name"];
+const PROVIDERS: Array<{ key: ProviderKey; label: string; local: boolean; free: boolean; placeholder: string; keyUrl?: string }> = [
+  { key: "ollama", label: "Ollama · free, on this Mac", local: true, free: true, placeholder: "llama3.1:8b" },
+  { key: "gemini", label: "Google Gemini · free tier", local: false, free: true, placeholder: "gemini-2.5-flash", keyUrl: "aistudio.google.com/apikey" },
+  { key: "groq", label: "Groq · free tier", local: false, free: true, placeholder: "llama-3.3-70b-versatile", keyUrl: "console.groq.com/keys" },
+  { key: "none", label: "Rules only · free", local: true, free: true, placeholder: "" },
+  { key: "openai", label: "OpenAI · paid", local: false, free: false, placeholder: "gpt-4.1-mini" },
+  { key: "xai", label: "xAI Grok · paid", local: false, free: false, placeholder: "grok-3-mini" },
 ];
+const CLOUD: ProviderKey[] = ["gemini", "groq", "openai", "xai"];
 
 interface Folder { account: string; path: string; note_count: number | null }
 
@@ -163,7 +167,11 @@ export function Setup({ status, refresh, sub }: AppCtx) {
               </div>
             ) : (
               <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}>
-                <span className="grow"><strong>Cloud processing.</strong> The text of new or changed notes in the selected folder is sent to {provider.label} for entity recognition. Unchanged notes are not re-sent; results are cached locally.</span>
+                <span className="grow">
+                  <strong>{provider.free ? "Free cloud tier." : "Paid cloud service."}</strong> The text of new or changed notes in the selected folder is sent to {provider.label.split(" ·")[0]} for entity recognition. Unchanged notes are not re-sent; results are cached locally.
+                  {provider.free && " Free tiers have rate limits (large first syncs are slowed down automatically), and Google may use free-tier Gemini requests to improve its products."}
+                  {!provider.free && " You are billed by the provider per use."}
+                </span>
               </div>
             )}
           </div>
@@ -179,7 +187,7 @@ export function Setup({ status, refresh, sub }: AppCtx) {
             </div>
           </div>
         )}
-        {(cfg.provider.name === "openai" || cfg.provider.name === "xai") && (
+        {CLOUD.includes(cfg.provider.name) && (
           <div className="field">
             <label>API key</label>
             <div>
@@ -188,7 +196,10 @@ export function Setup({ status, refresh, sub }: AppCtx) {
                 <button className="btn" disabled={!key || busy === "key"}
                         onClick={() => run("key", async () => { await put(`/secrets/${cfg.provider.name}`, { value: key }); setKey(""); await refresh(); }, "API key saved")}>Save key</button>
               </div>
-              <div className="hint">Stored in {status?.provider.key_storage ?? "the macOS Keychain"}. Never written to the repository, the vault or the settings file.</div>
+              <div className="hint">
+                {provider.keyUrl && <>Get a free key at <span className="mono">{provider.keyUrl}</span> (no payment card needed). </>}
+                Stored in {status?.provider.key_storage ?? "the macOS Keychain"}. Never written to the repository, the vault or the settings file.
+              </div>
             </div>
           </div>
         )}

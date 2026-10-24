@@ -13,8 +13,8 @@ Everything is set in the app (**Setup** and **Intelligence → Entity types**). 
 | `source.include_subfolders` | `false` | Mirror subfolders into matching subfolders |
 | `source.export_attachments` | `true` | Copy attachments into `_attachments/` |
 | `source.folder_path` | — | For `folder` sources |
-| `provider.name` | `none` | `none` (rules only), `ollama`, `openai`, `xai` |
-| `provider.model` | per provider | `gpt-4.1-mini`, `grok-3-mini` and `llama3.1:8b` are used when empty |
+| `provider.name` | `none` | Free: `none` (rules only), `ollama` (local), `gemini` (free tier), `groq` (free tier). Paid: `openai`, `xai` |
+| `provider.model` | per provider | When empty: `llama3.1:8b`, `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `gpt-4.1-mini`, `grok-3-mini` |
 | `provider.base_url` | per provider | Override, e.g. a remote Ollama |
 | `intelligence.auto_accept_confidence` | `0.8` | Below this, a new entity or stated relation goes to review |
 | `intelligence.fuzzy_auto_merge` | `0.93` | Name similarity to merge automatically as an alias |
@@ -33,7 +33,7 @@ Everything is set in the app (**Setup** and **Intelligence → Entity types**). 
 | `KB_DATA_DIR` | service | Override the data folder (tests use this) |
 | `KB_TOKEN` | service | Per-session API token; set by Electron |
 | `KB_PORT` | service | Port when run by hand (default 8765) |
-| `OPENAI_API_KEY`, `XAI_API_KEY` | service | Override the Keychain |
+| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY` | service | Override the Keychain |
 | `KB_DISABLE_KEYRING` | service | Use the 0600 file fallback instead of the Keychain |
 | `KB_MOCK_RESPONSES` | service | JSON of canned responses for provider `mock` (tests) |
 | `KB_BACKEND_DIR`, `KB_PYTHON` | Electron | Override where the service is started from |

@@ -32,7 +32,7 @@ scripts/build-mac.sh --install        # or: build "Knowledge Bridge.app" into /A
 
 In the app:
 
-1. **Setup** → *Load folders* → pick your Apple Notes folder. Choose your Obsidian vault. Pick an AI provider (Rules only, Ollama, OpenAI or xAI Grok), save an API key if needed, then press *Test connection*.
+1. **Setup** → *Load folders* → pick your Apple Notes folder. Choose your Obsidian vault. Pick an AI provider, save an API key if needed, then press *Test connection*. Free options: **Ollama** (runs on your Mac), **Google Gemini** free tier, **Groq** free tier. OpenAI and xAI are supported but paid.
 2. **Dashboard** → *Dry run* shows exactly what would be written, without writing anything. Then press *Sync now*.
 3. Open Obsidian → Graph View. Work through **Intelligence → Review queue** to confirm uncertain matches.
 4. Turn on automatic sync (Setup or Dashboard). It runs while the Mac is awake and the app is open. On macOS, closing the window keeps it running until you quit.
@@ -56,8 +56,9 @@ Folder names are configurable in Setup.
 ## Privacy
 
 - Apple Notes is only **read**. The connector issues no write commands to Notes.
-- **Rules only** and **Ollama** modes keep everything on your Mac.
-- With **OpenAI** or **xAI**, the text of *new or changed* notes in the selected folder is sent to that provider for entity extraction. Unchanged notes are never re-sent, and results are cached locally. The Setup and Dashboard screens show when cloud processing is active.
+- **Rules only** and **Ollama** modes keep everything on your Mac, at no cost.
+- **Google Gemini** and **Groq** have free tiers with rate limits. Free-tier Gemini requests may be used by Google to improve its products.
+- With any cloud provider (Gemini, Groq, OpenAI, xAI), the text of *new or changed* notes in the selected folder is sent to that provider for entity extraction. Unchanged notes are never re-sent, and results are cached locally. The Setup and Dashboard screens show when cloud processing is active.
 - The local API binds to `127.0.0.1` only. Every request needs a random per-launch token held by the Electron main process. The web page in the app never sees it.
 - Personal data (notes, database, generated pages, keys) lives outside the repository, and `.gitignore` excludes it all.
 

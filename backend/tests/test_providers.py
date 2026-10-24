@@ -127,3 +127,25 @@ def test_real_provider_roundtrip():
     p = make_provider(ProviderConfig(name=name))
     ok, msg = p.test()
     assert ok, msg
+
+
+@pytest.mark.parametrize("name,url,model", [
+    ("gemini", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-2.5-flash"),
+    ("groq", "https://api.groq.com/openai/v1/chat/completions", "llama-3.3-70b-versatile"),
+])
+def test_free_cloud_providers(name, url, model):
+    from app.config import FREE_PROVIDERS
+
+    set_secret(name, f"{name}-key")
+    p = make_provider(ProviderConfig(name=name))
+    assert p.model == model and p.api_key == f"{name}-key" and p.sends_data_off_device
+    assert name in FREE_PROVIDERS
+    seen = {}
+
+    def h(req):
+        seen["url"], seen["auth"] = str(req.url), req.headers["authorization"]
+        return _ok("{}")
+
+    p._client = httpx.Client(transport=httpx.MockTransport(h))
+    p.complete_json("s", "u")
+    assert seen == {"url": url, "auth": f"Bearer {name}-key"}
