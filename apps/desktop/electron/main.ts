@@ -14,6 +14,9 @@ const ALLOWED = [
 ];
 const METHODS = new Set(["GET", "POST", "PUT", "PATCH"]);
 
+// Show "Knowledge Bridge" (not "Electron") in the menu bar, About and Quit items.
+app.setName("Knowledge Bridge");
+
 const backendDir = resolveBackendDir(app.getAppPath(), app.isPackaged, process.resourcesPath);
 const python = process.env.KB_PYTHON || path.join(backendDir, ".venv", "bin", "python");
 const backend = new Backend(backendDir, python);

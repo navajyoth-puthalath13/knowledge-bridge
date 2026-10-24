@@ -1,7 +1,7 @@
 {
   "name": "knowledge-bridge-desktop",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Knowledge Bridge desktop control panel",
   "main": "dist-electron/main.js",
   "author": "Knowledge Bridge",
@@ -57,5 +57,6 @@
     "directories": {
       "output": "release"
     }
-  }
+  },
+  "productName": "Knowledge Bridge"
 }
