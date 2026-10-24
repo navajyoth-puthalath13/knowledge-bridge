@@ -127,6 +127,17 @@ class AppConfig(BaseModel):
         v = self.vault()
         return v.name if v else ""
 
+    def fix_vault_container(self) -> bool:
+        """If the chosen folder holds exactly one vault (e.g. iCloud Drive › Obsidian), use that vault."""
+        v = self.vault()
+        if not v or not v.is_dir() or (v / ".obsidian").is_dir():
+            return False
+        inside = [p for p in v.iterdir() if (p / ".obsidian").is_dir()]
+        if len(inside) != 1:
+            return False
+        self.vault_path = str(inside[0])
+        return True
+
     def problems(self) -> list[str]:
         """Configuration errors that block syncing."""
         out: list[str] = []

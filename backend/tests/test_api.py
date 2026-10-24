@@ -204,3 +204,18 @@ def test_rules_only_switches_to_groq_when_key_present(monkeypatch):
         assert json.loads(config_path().read_text())["provider"]["name"] == "groq"
     finally:
         s.shutdown()
+
+
+def test_saving_the_icloud_container_picks_the_vault(tmp_path):
+    from app.main import create_app
+
+    docs = tmp_path / "Documents"
+    (docs / "Navajyoth" / ".obsidian").mkdir(parents=True)
+    with TestClient(create_app(TOKEN), headers={"Authorization": f"Bearer {TOKEN}"}) as c:
+        cfg = c.get("/config").json()
+        cfg["vault_path"] = str(docs)
+        cfg["source"].update(kind="folder", folder_path=str(FIXTURES / "notes"))
+        assert c.put("/config", json=cfg).json()["problems"] == []
+        assert c.get("/config").json()["vault_path"] == str(docs / "Navajyoth")
+        assert (docs / "Navajyoth" / "Knowledge Bridge" / "Collections").is_dir()
+        assert not (docs / "Knowledge Bridge").exists()

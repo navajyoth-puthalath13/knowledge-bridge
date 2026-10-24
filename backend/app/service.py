@@ -29,6 +29,9 @@ class Service:
     def __init__(self, data: Path | None = None):
         self.data = data or data_dir()
         self.cfg = load_config()
+        if self.cfg.fix_vault_container():
+            save_config(self.cfg)
+            log.info("vault folder corrected to %s", self.cfg.vault_path)
         # Rules-only was the old default; with a Groq key available, use Groq (free tier).
         if self.cfg.provider.name == "none" and get_secret("groq"):
             self.cfg.provider.name = "groq"
@@ -53,6 +56,7 @@ class Service:
     # ------------------------------------------------------------------ config
     def update_config(self, cfg: AppConfig) -> list[str]:
         source_changed = cfg.source != self.cfg.source
+        cfg.fix_vault_container()
         self.cfg = cfg
         save_config(cfg)
         if source_changed:

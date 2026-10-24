@@ -267,3 +267,14 @@ def test_vaults_container_is_rejected(tmp_path):
     assert "not an Obsidian vault" in msg and "KB Test, Obsidian Vault" in msg
     cfg.vault_path = str(docs / "Obsidian Vault")
     assert cfg.problems() == []
+
+
+def test_single_vault_inside_container_is_selected_automatically(tmp_path):
+    from app.config import AppConfig
+
+    docs = tmp_path / "Documents"
+    (docs / "Navajyoth " / ".obsidian").mkdir(parents=True)
+    cfg = AppConfig(vault_path=str(docs))
+    assert cfg.fix_vault_container()
+    assert cfg.vault_path.endswith("Navajyoth ") and cfg.vault_name() == "Navajyoth "
+    assert not cfg.fix_vault_container()  # already a vault
