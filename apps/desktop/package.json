@@ -1,0 +1,61 @@
+{
+  "name": "knowledge-bridge-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Knowledge Bridge desktop control panel",
+  "main": "dist-electron/main.js",
+  "author": "Knowledge Bridge",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.2.5",
+    "cross-env": "^7.0.3",
+    "electron": "^37.10.3",
+    "electron-builder": "^26.18.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "5.8",
+    "vite": "^6.4.5",
+    "wait-on": "^8.0.5"
+  },
+  "scripts": {
+    "dev": "npm run build:electron && concurrently -k -n vite,electron \"vite\" \"wait-on tcp:127.0.0.1:5173 && cross-env-shell VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "build:electron": "tsc -p electron",
+    "build:renderer": "vite build",
+    "build": "npm run typecheck && npm run build:renderer && npm run build:electron",
+    "typecheck": "tsc -p tsconfig.json && tsc -p electron --noEmit",
+    "start": "npm run build && electron .",
+    "test:e2e": "node tests/e2e.mjs",
+    "dist": "npm run build && electron-builder --mac --dir"
+  },
+  "build": {
+    "appId": "local.knowledge-bridge",
+    "productName": "Knowledge Bridge",
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/backend-path.txt",
+        "to": "backend-path.txt"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dir"
+      ],
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "Knowledge Bridge reads your selected Apple Notes folder (read-only) to mirror it into Obsidian."
+      }
+    },
+    "directories": {
+      "output": "release"
+    }
+  }
+}

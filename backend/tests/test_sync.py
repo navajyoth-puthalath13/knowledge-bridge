@@ -217,3 +217,14 @@ def test_edited_generated_page_is_backed_up(env):
 def test_database_integrity_check(env):
     env.sync()
     assert env.db.integrity_check() == []
+
+
+def test_apple_notes_subfolders_map_to_mirror_subfolders(env):
+    from app.connectors.base import NoteSummary
+
+    env.cfg.source.kind = "apple_notes"
+    env.cfg.source.folder = "Knowledge"
+    eng = env.engine()
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge")) == ""
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Podcasts/2026")) == "Podcasts/2026"
+    assert eng._subfolder(NoteSummary(id="a", title="t", folder="Knowledge/Talks: Q&A")) == "Talks Q&A"

@@ -99,7 +99,7 @@ class SyncEngine:
         base = self.cfg.source.folder.strip("/")
         f = (s.folder or "").strip("/")
         if self.cfg.source.kind == "apple_notes" and base and f.startswith(base + "/"):
-            return safe_filename(f[len(base) + 1:]).replace(" / ", "/")
+            return "/".join(safe_filename(p) for p in f[len(base) + 1:].split("/"))
         if self.cfg.source.kind == "folder" and f:
             return "/".join(safe_filename(p) for p in f.split("/"))
         return ""

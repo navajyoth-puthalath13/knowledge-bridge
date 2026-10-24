@@ -48,7 +48,7 @@ class ProviderConfig(BaseModel):
     def resolved_model(self) -> str:
         if self.model:
             return self.model
-        return {"openai": "gpt-4.1-mini", "xai": "grok-3-mini", "ollama": "llama3.1:8b"}.get(self.name, "")
+        return {"openai": "gpt-4.1-mini", "xai": "grok-3-mini", "ollama": "llama3.1:8b", "mock": "mock-1"}.get(self.name, "")
 
     def is_cloud(self) -> bool:
         return self.name in ("openai", "xai")

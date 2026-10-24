@@ -103,3 +103,27 @@ def test_config_rejects_nested_output_folders(tmp_path):
     assert any("must not contain" in p for p in cfg.problems())
     with pytest.raises(ValueError):
         AppConfig(mirror_dir="../outside")
+
+
+def test_validation_tool_report(tmp_path):
+    from app.connectors.folder import FolderConnector
+    from app.tools.validate_apple_notes import validate
+
+    from .conftest import FIXTURES
+
+    ok, msg = validate(FolderConnector(FIXTURES / "notes"), tmp_path / "report")
+    report = (tmp_path / "report" / "report.md").read_text("utf-8")
+    assert ok and "Note ids stable between listings: yes" in report
+    assert "tables" in report and "inline images (data URI)" in report and "1/2 exported" in report
+    assert (tmp_path / "report" / "Workshop notes — rich text.mirror.md").exists()
+
+
+def test_apple_notes_connector_reports_non_macos_cleanly():
+    import sys
+
+    from app.connectors.apple_notes import AppleNotesConnector
+
+    if sys.platform == "darwin":
+        pytest.skip("covered by the macOS integration tests")
+    ok, msg = AppleNotesConnector("", "Knowledge").health()
+    assert not ok and "only available on macOS" in msg
