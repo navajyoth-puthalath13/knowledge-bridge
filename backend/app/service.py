@@ -275,7 +275,15 @@ class Service:
         p = make_provider(self.cfg.provider)
         if p is None:
             return True, "Rules-only mode: no AI provider is called; only already-known entities are recognised."
-        return p.test()
+        ok, msg = p.test()
+        if ok and not self.cfg.provider.model and getattr(p, "model", ""):
+            self.cfg.provider.model = p.model  # keep the model that worked, so results stay consistent
+            save_config(self.cfg)
+        return ok, msg
+
+    def list_models(self) -> list[str]:
+        p = make_provider(self.cfg.provider)
+        return p.list_models() if p is not None and hasattr(p, "list_models") else []
 
     def list_source_folders(self) -> list[dict]:
         if self.cfg.source.kind == "folder":

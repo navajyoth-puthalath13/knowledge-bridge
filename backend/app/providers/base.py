@@ -9,6 +9,10 @@ class ProviderError(RuntimeError):
         self.retryable = retryable
 
 
+class ModelNotFound(ProviderError):
+    pass
+
+
 class LLMProvider(ABC):
     """Returns raw JSON text. Validation happens in the intelligence layer."""
 

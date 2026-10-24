@@ -22,6 +22,7 @@ export function Setup({ status, refresh, sub }: AppCtx) {
   const [key, setKey] = useState("");
   const [login, setLogin] = useState<{ supported: boolean; enabled: boolean }>({ supported: false, enabled: false });
   const [test, setTest] = useState<{ ok: boolean; message: string } | null>(null);
+  const [models, setModels] = useState<string[] | null>(null);
   const { busy, run } = useAction();
   const toast = useToast();
 
@@ -156,7 +157,7 @@ export function Setup({ status, refresh, sub }: AppCtx) {
           <div>
             <div className="segmented">
               {PROVIDERS.map((p) => (
-                <button key={p.key} className={cfg.provider.name === p.key ? "on" : ""} onClick={() => { set((c) => { c.provider.name = p.key; c.provider.model = ""; }); setTest(null); }}>{p.label}</button>
+                <button key={p.key} className={cfg.provider.name === p.key ? "on" : ""} onClick={() => { set((c) => { c.provider.name = p.key; c.provider.model = ""; }); setTest(null); setModels(null); }}>{p.label}</button>
               ))}
             </div>
             {provider.local ? (
@@ -181,7 +182,18 @@ export function Setup({ status, refresh, sub }: AppCtx) {
           <div className="field">
             <label>Model</label>
             <div>
-              <input type="text" placeholder={provider.placeholder} value={cfg.provider.model} onChange={(e) => set((c) => { c.provider.model = e.target.value; })} />
+              <div className="input-row">
+                <input type="text" list="kb-models" placeholder={`Automatic (${provider.placeholder || "best available"})`} value={cfg.provider.model}
+                       onChange={(e) => set((c) => { c.provider.model = e.target.value; })} />
+                <datalist id="kb-models">{(models ?? []).map((m) => <option key={m} value={m} />)}</datalist>
+                <button className="btn" disabled={dirty || busy === "models"}
+                        onClick={() => run("models", async () => setModels((await get<{ models: string[] }>("/provider/models")).models))}>
+                  {busy === "models" ? "Loading…" : "Show available models"}
+                </button>
+              </div>
+              <div className="hint">
+                Leave empty to let the app pick a model your account can use. {models && `${models.length} models available — click the field to choose one.`}
+              </div>
               {cfg.provider.name === "ollama" && (
                 <input type="text" style={{ marginTop: 6 }} placeholder="Server URL (default http://127.0.0.1:11434/v1)" value={cfg.provider.base_url} onChange={(e) => set((c) => { c.provider.base_url = e.target.value; })} />
               )}
@@ -208,7 +220,7 @@ export function Setup({ status, refresh, sub }: AppCtx) {
           <label>Connection</label>
           <div>
             <div className="row">
-              <button className="btn" disabled={dirty || busy === "test"} onClick={() => run("test", async () => setTest(await post("/provider/test")))}>
+              <button className="btn" disabled={dirty || busy === "test"} onClick={() => run("test", async () => { setTest(await post("/provider/test")); await reload(); })}>
                 {busy === "test" ? "Testing…" : "Test connection"}
               </button>
               {dirty && <span className="muted small">Save first to test these settings.</span>}

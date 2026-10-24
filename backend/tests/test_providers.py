@@ -131,7 +131,7 @@ def test_real_provider_roundtrip():
 
 @pytest.mark.parametrize("name,url,model", [
     ("gemini", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-2.5-flash"),
-    ("groq", "https://api.groq.com/openai/v1/chat/completions", "llama-3.3-70b-versatile"),
+    ("groq", "https://api.groq.com/openai/v1/chat/completions", "openai/gpt-oss-120b"),
 ])
 def test_free_cloud_providers(name, url, model):
     from app.config import FREE_PROVIDERS
@@ -173,3 +173,72 @@ def test_env_file_is_git_ignored():
     assert r.returncode == 0, ".env must be ignored by git"
     r = subprocess.run(["git", "check-ignore", "-q", str(REPO / ".env.example")], cwd=REPO)
     assert r.returncode == 1, ".env.example should be tracked"
+
+
+def _groq_server(available, json_ok=True):
+    """Fake Groq: lists `available` models; 404 for anything else."""
+    calls = []
+
+    def h(req):
+        if req.url.path.endswith("/models"):
+            return httpx.Response(200, json={"data": [{"id": m} for m in available]})
+        body = json.loads(req.content)
+        calls.append(body)
+        if body["model"] not in available:
+            return httpx.Response(404, json={"error": {"message": f"The model `{body['model']}` does not exist"}})
+        if "response_format" in body and not json_ok:
+            return httpx.Response(400, json={"error": {"message": "response_format is not supported by this model"}})
+        return _ok('{"ok": true}')
+    return h, calls
+
+
+def test_missing_default_model_falls_back_to_an_available_one():
+    h, calls = _groq_server(["whisper-large-v3", "llama-guard-4-12b", "qwen/qwen3-32b", "llama-3.1-8b-instant"])
+    p = OpenAICompatibleProvider("groq", "openai/gpt-oss-120b", "k", transport=httpx.MockTransport(h), auto_model=True)
+    ok, msg = p.test()
+    assert ok, msg
+    assert p.model == "qwen/qwen3-32b"  # first preferred chat model that exists; whisper/guard are skipped
+    assert [c["model"] for c in calls] == ["openai/gpt-oss-120b", "qwen/qwen3-32b"]
+
+
+def test_user_chosen_model_is_not_replaced():
+    h, _ = _groq_server(["llama-3.1-8b-instant"])
+    p = OpenAICompatibleProvider("groq", "my-model", "k", transport=httpx.MockTransport(h), auto_model=False)
+    ok, msg = p.test()
+    assert not ok and "'my-model' is not available" in msg and "does not exist" in msg
+
+
+def test_model_without_json_mode_still_works():
+    h, calls = _groq_server(["llama-3.1-8b-instant"], json_ok=False)
+    p = OpenAICompatibleProvider("groq", "llama-3.1-8b-instant", "k", transport=httpx.MockTransport(h))
+    assert p.complete_json("s", "u") == '{"ok": true}'
+    assert "response_format" in calls[0] and "response_format" not in calls[-1]
+
+
+def test_list_models_filters_non_chat_models():
+    h, _ = _groq_server(["whisper-large-v3", "playai-tts", "meta-llama/llama-prompt-guard-2-86m", "openai/gpt-oss-20b"])
+    p = OpenAICompatibleProvider("groq", "x", "k", transport=httpx.MockTransport(h))
+    assert p.list_models() == ["openai/gpt-oss-20b"]
+
+
+def test_working_model_is_remembered_after_test(monkeypatch):
+    from app.service import Service
+    from app.providers import openai_compat
+
+    h, _ = _groq_server(["llama-3.1-8b-instant"])
+    real = openai_compat.OpenAICompatibleProvider.__init__
+
+    def init(self, *a, **kw):
+        kw["transport"] = httpx.MockTransport(h)
+        real(self, *a, **kw)
+
+    monkeypatch.setattr(openai_compat.OpenAICompatibleProvider, "__init__", init)
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    s = Service()
+    try:
+        assert s.cfg.provider.name == "groq" and s.cfg.provider.model == ""
+        ok, msg = s.test_provider()
+        assert ok and s.cfg.provider.model == "llama-3.1-8b-instant"
+        assert s.list_models() == ["llama-3.1-8b-instant"]
+    finally:
+        s.shutdown()

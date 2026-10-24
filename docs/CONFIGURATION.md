@@ -14,7 +14,7 @@ Everything is set in the app (**Setup** and **Intelligence → Entity types**). 
 | `source.export_attachments` | `true` | Copy attachments into `_attachments/` |
 | `source.folder_path` | — | For `folder` sources |
 | `provider.name` | `groq` | Free options offered in the app: `groq` (free tier, default), `gemini` (free tier), `ollama` (local), `none` (rules only). `openai`/`xai` remain in code but are not offered. A saved `none` switches to `groq` automatically when a Groq key exists. |
-| `provider.model` | per provider | When empty: `llama3.1:8b`, `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `gpt-4.1-mini`, `grok-3-mini` |
+| `provider.model` | per provider | When empty the app picks an available model automatically (first try: `llama3.1:8b`, `gemini-2.5-flash`, `openai/gpt-oss-120b`), `gpt-4.1-mini`, `grok-3-mini` |
 | `provider.base_url` | per provider | Override, e.g. a remote Ollama |
 | `intelligence.auto_accept_confidence` | `0.8` | Below this, a new entity or stated relation goes to review |
 | `intelligence.fuzzy_auto_merge` | `0.93` | Name similarity to merge automatically as an alias |

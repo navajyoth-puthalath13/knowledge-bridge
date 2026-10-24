@@ -15,7 +15,7 @@ def make_provider(cfg: ProviderConfig) -> LLMProvider | None:
         return MockProvider(path=os.environ.get("KB_MOCK_RESPONSES"))
     key = get_secret(cfg.name) if cfg.name in CLOUD_PROVIDERS else None
     return OpenAICompatibleProvider(cfg.name, cfg.resolved_model(), key, cfg.base_url,
-                                    cfg.temperature, cfg.timeout_seconds)
+                                    cfg.temperature, cfg.timeout_seconds, auto_model=not cfg.model)
 
 
 __all__ = ["LLMProvider", "ProviderError", "MockProvider", "OpenAICompatibleProvider", "make_provider"]

@@ -69,6 +69,16 @@ def provider_test(request: Request):
     return {"ok": ok, "message": msg}
 
 
+@router.get("/provider/models")
+def provider_models(request: Request):
+    from ..providers.base import ProviderError
+
+    try:
+        return {"models": svc(request).list_models()}
+    except ProviderError as e:
+        raise HTTPException(502, str(e))
+
+
 @router.get("/source/folders")
 def source_folders(request: Request):
     try:

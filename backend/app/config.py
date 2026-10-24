@@ -52,7 +52,8 @@ class ProviderConfig(BaseModel):
     def resolved_model(self) -> str:
         if self.model:
             return self.model
-        return {"ollama": "llama3.1:8b", "gemini": "gemini-2.5-flash", "groq": "llama-3.3-70b-versatile",
+        # first guess only: if the provider no longer offers it, an available model is chosen
+        return {"ollama": "llama3.1:8b", "gemini": "gemini-2.5-flash", "groq": "openai/gpt-oss-120b",
                 "openai": "gpt-4.1-mini", "xai": "grok-3-mini", "mock": "mock-1"}.get(self.name, "")
 
     def is_cloud(self) -> bool:
