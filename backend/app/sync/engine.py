@@ -127,6 +127,34 @@ class SyncEngine:
         report.errors.append({"note": note, "note_id": note_id, "message": message, "kind": kind})
         report.stats.errors += 1
 
+    # ------------------------------------------------------------------ vault changes
+    def adopt_vault(self) -> bool:
+        """Start the mirror afresh when the vault (or mirror folder) has changed.
+
+        Mirror paths and checksums only make sense for the vault they were written to.
+        Without this, switching vaults would make every copy look "deleted in Obsidian".
+        Files in the old vault are left untouched; entities and review decisions are kept."""
+        root = str(self.cfg.mirror_root())
+        known = self.db.scalar("SELECT value FROM meta WHERE key='mirror_root'")
+        if known is None:
+            # databases from before this check: stale if none of the recorded copies exist here
+            paths = [r["mirror_path"] for r in self.db.q("SELECT mirror_path FROM notes WHERE mirror_path IS NOT NULL")]
+            changed = bool(paths) and not any((self.vault / p).exists() for p in paths)
+        else:
+            changed = known != root
+        with self.db.tx() as c:
+            if changed:
+                c.execute("UPDATE notes SET mirror_path=NULL, mirror_hash=NULL, source_hash=NULL, modified_at=NULL,"
+                          " last_error=NULL, status=CASE WHEN status IN ('conflict','detached') THEN 'active'"
+                          " ELSE status END, updated_at=?", (now(),))
+                c.execute("UPDATE conflicts SET status='resolved', resolution='vault_changed', resolved_at=?"
+                          " WHERE status='open'", (now(),))
+                c.execute("DELETE FROM pending_writes")
+                c.execute("DELETE FROM meta WHERE key='render_manifest'")
+                log.info("vault changed to %s: mirror will be rebuilt there", root)
+            c.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('mirror_root', ?)", (root,))
+        return changed
+
     # ------------------------------------------------------------------ recovery
     def recover(self) -> int:
         """Finish or roll back writes interrupted by a crash or power loss."""
@@ -281,6 +309,7 @@ class SyncEngine:
             return report
         if not dry_run:
             ensure_structure(self.cfg)
+            self.adopt_vault()
             self.recover()
             with self.db.tx() as c:
                 report.run_id = c.execute("INSERT INTO sync_runs(started_at, dry_run, trigger) VALUES (?,?,?)",

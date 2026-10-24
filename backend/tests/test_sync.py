@@ -278,3 +278,29 @@ def test_single_vault_inside_container_is_selected_automatically(tmp_path):
     assert cfg.fix_vault_container()
     assert cfg.vault_path.endswith("Navajyoth ") and cfg.vault_name() == "Navajyoth "
     assert not cfg.fix_vault_container()  # already a vault
+
+
+def test_switching_vaults_rebuilds_mirror_without_conflicts(env, tmp_path):
+    env.sync()
+    old = env.vault
+    new = tmp_path / "Navajyoth "
+    (new / ".obsidian").mkdir(parents=True)
+    env.cfg.vault_path = str(new)
+    env.vault = new
+    rep = env.sync()
+    assert rep.stats.conflicts == 0 and rep.status == "ok", rep.errors
+    assert rep.stats.created == 6
+    assert env.mirror("Reading list").exists() and (old / "Apple Notes" / "Reading list.md").exists()
+    assert env.gen("Entities/Books/Finding Flow.md").exists()
+    assert env.entities_of("book").count("Finding Flow") == 1  # entities kept, not duplicated
+
+
+def test_old_database_with_stale_paths_is_adopted(env, tmp_path):
+    env.sync()
+    env.db.conn().execute("DELETE FROM meta WHERE key='mirror_root'")  # database from before the check
+    new = tmp_path / "other"
+    (new / ".obsidian").mkdir(parents=True)
+    env.cfg.vault_path = str(new)
+    env.vault = new
+    rep = env.sync()
+    assert rep.stats.conflicts == 0 and rep.stats.created == 6

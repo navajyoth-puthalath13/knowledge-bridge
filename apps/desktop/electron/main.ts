@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import fs from "node:fs";
 import path from "node:path";
 import { Backend, resolveBackendDir } from "./backend";
 
@@ -80,8 +81,10 @@ ipcMain.handle("dialog:pickFolder", async (_e, title: unknown) => {
 ipcMain.handle("open:obsidian", async () => {
   const cfg = await config();
   if (!cfg?.vault_path) return false;
-  const name = cfg.obsidian_vault_name || path.basename(cfg.vault_path);
-  await shell.openExternal(`obsidian://open?vault=${encodeURIComponent(name)}`);
+  // Open by location, not by name: vault names with trailing spaces or duplicates are not found by name.
+  const page = path.join(cfg.vault_path, cfg.generated_dir, "Collections", "Books.md");
+  const target = fs.existsSync(page) ? page : cfg.vault_path;
+  await shell.openExternal(`obsidian://open?path=${encodeURIComponent(target)}`);
   return true;
 });
 
