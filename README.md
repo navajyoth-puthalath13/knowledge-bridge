@@ -45,15 +45,14 @@ The first access to Notes shows *"Knowledge Bridge wants to control Notes"*. All
 
 | Location | Contents | Written by |
 | --- | --- | --- |
-| `<vault>/Apple Notes/` | One Markdown file per note, plus `_attachments/` | Sync engine only. AI output never goes here. |
-| `<vault>/Knowledge Bridge/Entities/…` | Book, show, episode, person, event and reflection pages | Renderer, through a writer that physically cannot write outside this folder |
-| `<vault>/Knowledge Bridge/Collections/` | Books, Podcasts, Personal Thinking, Design Events | Renderer |
-| `<vault>/Knowledge Bridge/Index/` | `entities.json`, `relationships.json` | Renderer |
-| `<vault>/Knowledge Bridge/Logs/` | Sync history, backups of anything ever overwritten | Renderer |
+| `<vault>/Apple Notes/<Notes folder>/` | Plain copies of your notes: same text and paragraphs, nothing added | Sync engine only. AI output never goes here. |
+| `<vault>/Knowledge Bridge/Books/`, `Podcasts/`, `Events/` | One page per book, podcast and event. Each links to every note that mentions it, with the sentence that mentions it. These are the nodes in Graph View. | Renderer, through a writer that cannot write outside this folder |
+| `<vault>/Knowledge Bridge/.kb/` | Hidden: JSON index and backups of anything ever overwritten | Renderer |
+| `<vault>/.obsidian/graph.json` | Graph View colour groups: notes, books, podcasts, events (your other graph settings are kept) | Renderer |
 | `~/Library/Application Support/Knowledge Bridge/` | `config.json`, SQLite registry, logs | Service |
 | macOS Keychain ("Knowledge Bridge") | API keys | Service |
 
-Folder names are configurable in Setup.
+People's names, single podcast episodes and dated event editions are not nodes by default; turn them on in **Intelligence → Entity types** if you want them.
 
 ## Privacy
 

@@ -11,7 +11,7 @@ Setup → *Load folders* and pick the folder from the list. Paths are `Parent/Ch
 
 **A note shows as a conflict**
 You edited its copy in Obsidian, and the Apple Note changed too. Nothing was overwritten. (Missing copies are not conflicts; they are restored automatically.) In Sync history you can:
-- *Use Apple Notes version*: your Obsidian edit is saved to `Knowledge Bridge/Logs/backups/…` first.
+- *Use Apple Notes version*: your Obsidian edit is saved to `Knowledge Bridge/.kb/backups/…` (a hidden folder; press ⌘⇧. in Finder to show it) first.
 - *Keep Obsidian version*: the note stops syncing ("detached") until you choose *Re-attach* under Intelligence → Notes, which also backs up the Obsidian copy first.
 
 **I deleted a mirrored file in Obsidian**

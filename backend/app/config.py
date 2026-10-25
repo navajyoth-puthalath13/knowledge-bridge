@@ -90,7 +90,7 @@ class AppConfig(BaseModel):
     intelligence: IntelligenceConfig = Field(default_factory=IntelligenceConfig)
     sync_interval_minutes: int = 15
     automation_enabled: bool = False
-    mirror_frontmatter: bool = True  # deterministic sync metadata (never AI output)
+    mirror_frontmatter: bool = False  # optional sync metadata block; off keeps copies identical to the notes
 
     @field_validator("mirror_dir", "generated_dir")
     @classmethod

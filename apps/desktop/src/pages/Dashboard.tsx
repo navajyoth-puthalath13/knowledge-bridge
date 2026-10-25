@@ -106,6 +106,16 @@ export function Dashboard({ status, backend, refresh, go }: AppCtx) {
           </div>
         </div>
         {activity.running ? <Progress activity={activity} /> : <LastReport report={status.last_report} go={go} />}
+        {status.graph_legend?.length > 0 && (
+          <div className="row small muted" style={{ marginTop: 12, gap: 14 }}>
+            <span>Graph View colours:</span>
+            {status.graph_legend.map((g) => (
+              <span key={g.label} className="row" style={{ gap: 5 }}>
+                <span className="dot" style={{ background: g.color }} />{g.label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

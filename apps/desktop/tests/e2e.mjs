@@ -63,7 +63,7 @@ try {
   await page.getByText("Dry run", { exact: true }).last().waitFor();
   await page.locator("td", { hasText: "Design Days 2026 — Day 2" }).first().waitFor();
   // Saving Setup creates the empty folder structure; the dry run itself must not write any notes.
-  assert.ok(fs.existsSync(path.join(vault, "Knowledge Bridge", "Entities", "Books")), "folder structure created on save");
+  assert.ok(fs.existsSync(path.join(vault, "Knowledge Bridge", "Books")), "folder structure created on save");
   assert.deepEqual(fs.readdirSync(path.join(vault, "Apple Notes")), [], "dry run must not write notes");
   await shot("02-dry-run");
 
@@ -73,11 +73,12 @@ try {
   const metric = (label) => page.locator(".metric", { hasText: label }).locator(".metric-value").innerText();
   await page.waitForFunction(() => document.querySelector(".metric .metric-value")?.textContent === "6");
   assert.equal(await metric("Synced notes"), "6");
-  assert.equal(await metric("Entities"), "11");
-  assert.equal(await metric("Pending reviews"), "5");
+  assert.equal(await metric("Entities"), "6"); // books, podcasts, events only
+  assert.equal(await metric("Pending reviews"), "2");
   await shot("03-dashboard-after-sync");
 
-  const ff = path.join(vault, "Knowledge Bridge", "Entities", "Books", "Finding Flow.md");
+  const ff = path.join(vault, "Knowledge Bridge", "Books", "Finding Flow.md");
+  assert.ok(!fs.existsSync(path.join(vault, "Knowledge Bridge", "People")), "people are not nodes by default");
   assert.ok(fs.existsSync(ff), "Finding Flow page exists");
   const ffText = fs.readFileSync(ff, "utf8");
   assert.match(ffText, /\[\[Apple Notes\/Design Days 2026 — Day 2\|/);
@@ -85,13 +86,13 @@ try {
   const mirror = fs.readFileSync(path.join(vault, "Apple Notes", "Design Days 2026 — Day 2.md"), "utf8");
   assert.ok(!/(?<!!)\[\[/.test(mirror), "no links inserted into mirrored notes");
 
-  step("review queue: create a person from an ambiguous reference");
+  step("review queue: link an ambiguous mention to the existing book");
   await page.getByRole("button", { name: /Intelligence/ }).click();
   await page.getByText("Ambiguous reference").first().waitFor();
   await shot("04-review-queue");
-  const alex = page.locator(".review", { hasText: "Alex gave a short talk" });
-  await alex.getByRole("button", { name: "Create new" }).click();
-  await page.waitForFunction(() => document.querySelectorAll(".review").length === 4);
+  const flow = page.locator(".review", { hasText: "Flow keeps coming up" });
+  await flow.getByRole("button", { name: "Link", exact: true }).click();
+  await page.waitForFunction(() => document.querySelectorAll(".review").length === 1);
 
   step("entities: inspect the canonical book and its evidence");
   await page.getByRole("button", { name: "Entities", exact: true }).click();
@@ -100,7 +101,7 @@ try {
   await page.locator(".drawer").getByText("Halfway through, the speaker mentioned Finding Flow", { exact: false }).waitFor();
   await shot("05-entity-detail");
   await page.locator(".drawer").getByRole("button", { name: "Close" }).click();
-  assert.ok(fs.existsSync(path.join(vault, "Knowledge Bridge", "Entities", "People", "Alex.md")), "Alex page rendered after review");
+  assert.match(fs.readFileSync(ff, "utf8"), /\[\[Apple Notes\/Reading list\|/, "linked mention appears on the book page");
 
   step("history and diagnostics reflect real state");
   await page.getByRole("button", { name: "Sync history" }).click();

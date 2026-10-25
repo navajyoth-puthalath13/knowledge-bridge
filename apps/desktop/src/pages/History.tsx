@@ -15,7 +15,7 @@ export function History({ status, refresh }: AppCtx) {
 
   const resolve = (id: number, action: string) =>
     run(`c${id}`, async () => { await post(`/conflicts/${id}/resolve`, { action }); await conflicts.reload(); await refresh(); },
-      action === "use_apple_notes" ? "Apple Notes version restored; your Obsidian edit was backed up in Logs/backups."
+      action === "use_apple_notes" ? "Apple Notes version restored; your Obsidian edit was backed up in Knowledge Bridge/.kb/backups."
         : "Obsidian version kept. This note will no longer sync until you re-attach it.");
 
   return (

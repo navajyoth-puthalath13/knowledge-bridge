@@ -22,7 +22,7 @@ from typing import Callable
 from ..config import AppConfig
 from ..connectors.base import Connector, ConnectorError, NoteSummary, SourceNote
 from ..intelligence.normalize import safe_filename
-from ..intelligence.pipeline import Context, IntegrityError, process_note
+from ..intelligence.pipeline import PIPELINE_VERSION, Context, IntegrityError, process_note
 from ..obsidian.mirror import render_mirror, source_hash
 from ..obsidian.render import render_all
 from ..obsidian.structure import ensure_structure
@@ -429,7 +429,8 @@ class SyncEngine:
         st = report.stats
         ctx = Context(self.db, self.cfg, self.provider, refresh=self.refresh)
         rows = self.db.q("SELECT id, title FROM notes WHERE status='active' AND mirror_path IS NOT NULL AND "
-                         "(processed_hash IS NULL OR processed_hash != source_hash OR last_error IS NOT NULL)")
+                         "(processed_hash IS NULL OR processed_hash != source_hash OR last_error IS NOT NULL "
+                         " OR processed_key IS NULL OR processed_key NOT LIKE ?)", (f"%|{PIPELINE_VERSION}",))
         ids = [r["id"] for r in rows] + [i for i in reprocess if i not in {r["id"] for r in rows}]
         for n, nid in enumerate(ids):
             if self.cancel.is_set():

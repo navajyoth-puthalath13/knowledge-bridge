@@ -36,7 +36,7 @@ def test_renamed_note_moves_mirror_without_duplicates(env):
     assert not old.exists() and env.mirror("Design Days 2026 (day two)").exists()
     assert env.db.scalar("SELECT COUNT(*) FROM notes") == 7
     assert env.db.scalar("SELECT COUNT(*) FROM entities WHERE note_id=?", (EVENT,)) == 1
-    page = env.gen("Entities/Books/Finding Flow.md").read_text("utf-8")
+    page = env.gen("Books/Finding Flow.md").read_text("utf-8")
     assert "[[Apple Notes/Design Days 2026 (day two)|" in page and "Day 2|" not in page
 
 
@@ -49,7 +49,7 @@ def test_missing_note_keeps_mirror_and_entities(env):
     assert env.db.scalar("SELECT status FROM notes WHERE id=?", (PODCAST,)) == "missing"
     assert env.mirror("Design Matters — Debbie Millman with a product designer").exists()
     assert env.entity("podcast_show", "Design Matters") is not None
-    page = env.gen("Entities/Books/Finding Flow.md").read_text("utf-8")
+    page = env.gen("Books/Finding Flow.md").read_text("utf-8")
     assert "(removed from Apple Notes)" in page
 
 
@@ -94,7 +94,7 @@ def test_resolve_conflict_with_apple_notes_version_backs_up_edit(env, tmp_path, 
     cid = env.db.scalar("SELECT id FROM conflicts")
     svc.resolve_conflict(cid, "use_apple_notes")
     assert "Changed in Notes" in m.read_text("utf-8")
-    backups = list(env.gen("Logs/backups").rglob("*.md"))
+    backups = list(env.gen(".kb/backups").rglob("*.md"))
     assert backups and backups[0].read_text("utf-8") == "edited"
     rep = env.sync()
     assert rep.stats.conflicts == 0 and env.db.scalar("SELECT status FROM notes WHERE id=?", (EVENT,)) == "active"
@@ -227,11 +227,11 @@ def test_edited_generated_page_is_backed_up(env):
     from app.obsidian.render import render_all
 
     env.sync()
-    p = env.gen("Entities/Books/Finding Flow.md")
+    p = env.gen("Books/Finding Flow.md")
     p.write_text("I edited this", "utf-8")
     render_all(env.db, env.cfg)
     assert "Finding Flow" in p.read_text("utf-8")
-    assert any(b.read_text("utf-8") == "I edited this" for b in env.gen("Logs/backups").rglob("*.md"))
+    assert any(b.read_text("utf-8") == "I edited this" for b in env.gen(".kb/backups").rglob("*.md"))
 
 
 def test_database_integrity_check(env):
@@ -256,13 +256,12 @@ def test_apple_notes_subfolders_map_to_mirror_subfolders(env):
 def test_vault_structure_created_before_first_sync(env):
     from app.obsidian.structure import ensure_structure
 
+    env.cfg.intelligence.enabled_types = {}  # app defaults: books, podcasts, events
     created = ensure_structure(env.cfg)
-    for rel in ["Apple Notes", "Knowledge Bridge/Collections", "Knowledge Bridge/Entities/Books",
-                "Knowledge Bridge/Entities/Podcast Shows", "Knowledge Bridge/Entities/Podcast Episodes",
-                "Knowledge Bridge/Entities/People", "Knowledge Bridge/Entities/Events",
-                "Knowledge Bridge/Entities/Personal Thinking", "Knowledge Bridge/Index", "Knowledge Bridge/Logs"]:
+    for rel in ["Apple Notes", "Knowledge Bridge/Books", "Knowledge Bridge/Podcasts", "Knowledge Bridge/Events"]:
         assert (env.vault / rel).is_dir(), rel
-    assert "Knowledge Bridge/Entities/Books" in created
+    assert not (env.vault / "Knowledge Bridge" / "People").exists()
+    assert sorted(created) == ["Knowledge Bridge/Books", "Knowledge Bridge/Events", "Knowledge Bridge/Podcasts"]
     assert ensure_structure(env.cfg) == []  # idempotent
 
 
@@ -311,7 +310,7 @@ def test_switching_vaults_rebuilds_mirror_without_conflicts(env, tmp_path):
     assert rep.stats.conflicts == 0 and rep.status == "ok", rep.errors
     assert rep.stats.created == 6
     assert env.mirror("Reading list").exists() and (old / "Apple Notes" / "Reading list.md").exists()
-    assert env.gen("Entities/Books/Finding Flow.md").exists()
+    assert env.gen("Books/Finding Flow.md").exists()
     assert env.entities_of("book").count("Finding Flow") == 1  # entities kept, not duplicated
 
 

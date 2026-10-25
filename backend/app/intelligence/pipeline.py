@@ -28,7 +28,7 @@ from .normalize import find_excerpt, norm, similarity
 from .prompts import PROMPT_VERSION, build_messages
 
 log = logging.getLogger(__name__)
-PIPELINE_VERSION = "1"
+PIPELINE_VERSION = "2"  # bump to reprocess every note once (e.g. after entity type changes)
 # Free tiers cap tokens per request/minute (Groq ~12k TPM on llama-3.3-70b). Very long notes are
 # trimmed for analysis only; the mirror and evidence checks always use the full note.
 MAX_ANALYSIS_CHARS = 16_000

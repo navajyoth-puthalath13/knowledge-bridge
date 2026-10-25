@@ -30,26 +30,33 @@ COLLECTIONS = ["Books", "Podcasts", "Personal Thinking", "Design Events"]
 ENTITY_TYPES: dict[str, EntityType] = {
     t.key: t
     for t in [
+        # Main topics: on by default. Each becomes one node that links every note mentioning it.
         EntityType("book", "Book", "Books", "Books", description="A specific book (title of a published book)."),
         EntityType(
-            "podcast_show", "Podcast show", "Podcast Shows", "Podcasts",
-            description="A podcast series/show as a whole (e.g. 'Design Matters').",
+            "podcast_show", "Podcast", "Podcasts", "Podcasts",
+            description="A podcast (the show as a whole, e.g. 'The Knowledge Project', 'Design Matters'). "
+            "For a note about one episode, extract the show it belongs to.",
         ),
+        EntityType(
+            "event_series", "Event", "Events", "Design Events",
+            description="An event, conference, meetup or community (e.g. 'Design Days', 'Friends of Figma'). "
+            "Use its general name without year or edition ('Design Days', not 'Design Days 2026').",
+        ),
+        # Finer-grained types: off by default to keep the graph to main topics (people's names are not nodes).
         EntityType(
             "podcast_episode", "Podcast episode", "Podcast Episodes", "Podcasts", parent_type="podcast_show",
             description="One specific episode of a podcast. Set parent to the show name if known.",
+            enabled_by_default=False,
         ),
         EntityType(
             "person", "Person", "People", None, plural="People",
             description="A named real person: designer, author, speaker, host, guest.",
+            enabled_by_default=False,
         ),
         EntityType(
-            "event_series", "Event series", "Events", "Design Events", plural="Event series",
-            description="A recurring event, meetup series or community (e.g. 'Friends of Figma', 'Design Days').",
-        ),
-        EntityType(
-            "event", "Event", "Events", "Design Events", parent_type="event_series",
-            description="One specific event, meetup, conference edition or session. Set parent to its series if known.",
+            "event", "Event edition", "Event Editions", "Design Events", parent_type="event_series",
+            description="One specific edition or session of an event. Set parent to the event's general name.",
+            enabled_by_default=False,
         ),
         EntityType(
             "topic", "Topic", "Topics", None,

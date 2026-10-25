@@ -1,26 +1,22 @@
 """Create the vault folder layout up front, so it is visible in Obsidian before the first sync.
 
     <vault>/
-      Apple Notes/                      faithful copies of your notes
+      Apple Notes/<your Notes folder>/   plain copies of your notes
       Knowledge Bridge/
-        Collections/                    Books, Podcasts, Personal Thinking, Design Events
-        Entities/
-          Books/  Podcast Shows/  Podcast Episodes/  People/  Events/  Topics/  Personal Thinking/
-        Index/                          entities.json, relationships.json
-        Logs/                           sync history and backups
+        Books/  Podcasts/  Events/       one page (graph node) per main topic
 
 Only folders are created here; pages come from the renderer. Nothing existing is touched.
 """
 from __future__ import annotations
 
 from ..config import AppConfig
-from ..entities.types import ENTITY_TYPES
+from ..entities.types import enabled_types
 from .writer import ScopedWriter
 
 
-def generated_folders() -> list[str]:
-    entity_folders = sorted({t.folder for t in ENTITY_TYPES.values()} | {"Personal Thinking"})
-    return ["Collections", "Index", "Logs"] + [f"Entities/{f}" for f in entity_folders]
+def generated_folders(cfg: AppConfig) -> list[str]:
+    """One folder per enabled main-topic type, e.g. Books, Podcasts, Events."""
+    return sorted({t.folder for t in enabled_types(cfg.intelligence.enabled_types)})
 
 
 def ensure_structure(cfg: AppConfig) -> list[str]:
@@ -28,7 +24,7 @@ def ensure_structure(cfg: AppConfig) -> list[str]:
     created = []
     cfg.mirror_root().mkdir(parents=True, exist_ok=True)
     gen = ScopedWriter(cfg.generated_root())  # confined to the generated folder
-    for rel in generated_folders():
+    for rel in generated_folders(cfg):
         path = gen.resolve(rel)
         if not path.is_dir():
             path.mkdir(parents=True, exist_ok=True)

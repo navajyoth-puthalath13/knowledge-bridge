@@ -56,9 +56,14 @@ def test_status_counts_come_from_backend(client):
     assert client.post("/sync", json={}).json() == {"started": True}
     s = _wait(client)
     assert s["counts"]["notes"] == 6
-    assert s["counts"]["entities"] == 11
-    assert s["counts"]["reviews"] == 5
-    assert s["counts"]["relationships"] > 10
+    # default graph: books, podcasts and events only (no people, no single episodes)
+    assert s["counts"]["entities"] == 6
+    assert s["counts"]["reviews"] == 2
+    assert s["counts"]["relationships"] > 5
+    assert client.get("/entities", params={"type": "person"}).json() == []
+    names = {e["name"] for e in client.get("/entities").json()}
+    assert names == {"Finding Flow", "The Design of Everyday Things", "Design Matters", "Design Days",
+                     "Friends of Figma", "After Office Hours"}
     assert s["last_sync"]["status"] == "ok"
     assert s["connector"]["ok"] and s["vault"]["ok"]
     assert s["last_report"]["stats"]["created"] == 6
@@ -104,12 +109,12 @@ def test_entity_types_toggle(client):
 def test_rename_and_merge_entity(client):
     client.post("/sync", json={})
     _wait(client)
-    people = {p["name"]: p for p in client.get("/entities", params={"type": "person"}).json()}
-    client.patch(f"/entities/{people['Don Norman']['id']}", json={"add_alias": "Donald Norman"})
-    assert "Donald Norman" in client.get("/entities", params={"q": "donald"}).json()[0]["aliases"]
-    r = client.post(f"/entities/{people['Don Norman']['id']}/merge", json={"into": people["Debbie Millman"]["id"]})
+    events = {p["name"]: p for p in client.get("/entities", params={"type": "event_series"}).json()}
+    client.patch(f"/entities/{events['Design Days']['id']}", json={"add_alias": "Salesforce Design Days"})
+    assert "Salesforce Design Days" in client.get("/entities", params={"q": "salesforce"}).json()[0]["aliases"]
+    r = client.post(f"/entities/{events['After Office Hours']['id']}/merge", json={"into": events["Friends of Figma"]["id"]})
     assert r.status_code == 200
-    assert "Don Norman" not in {p["name"] for p in client.get("/entities", params={"type": "person"}).json()}
+    assert "After Office Hours" not in {p["name"] for p in client.get("/entities", params={"type": "event_series"}).json()}
 
 
 def test_conflict_endpoints(client):
@@ -185,8 +190,8 @@ def test_saving_setup_creates_vault_folders(tmp_path):
         cfg["vault_path"] = str(tmp_path / "vault")
         cfg["source"].update(kind="folder", folder_path=str(src))
         r = c.put("/config", json=cfg).json()
-        assert "Knowledge Bridge/Entities/Books" in r["created_folders"]
-        assert (tmp_path / "vault" / "Knowledge Bridge" / "Collections" / "Books.md").exists()
+        assert "Knowledge Bridge/Books" in r["created_folders"]
+        assert (tmp_path / "vault" / "Knowledge Bridge" / "Podcasts").is_dir()
         assert (tmp_path / "vault" / "Apple Notes").is_dir()
 
 
@@ -217,7 +222,7 @@ def test_saving_the_icloud_container_picks_the_vault(tmp_path):
         cfg["source"].update(kind="folder", folder_path=str(FIXTURES / "notes"))
         assert c.put("/config", json=cfg).json()["problems"] == []
         assert c.get("/config").json()["vault_path"] == str(docs / "Navajyoth")
-        assert (docs / "Navajyoth" / "Knowledge Bridge" / "Collections").is_dir()
+        assert (docs / "Navajyoth" / "Knowledge Bridge" / "Books").is_dir()
         assert not (docs / "Knowledge Bridge").exists()
 
 

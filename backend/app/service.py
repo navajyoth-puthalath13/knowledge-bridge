@@ -12,9 +12,10 @@ from . import __version__
 from .config import CLOUD_PROVIDERS, FREE_PROVIDERS, AppConfig, data_dir, load_config, save_config
 from .connectors import ConnectorError, make_connector
 from .connectors.apple_notes import AppleNotesConnector
-from .entities.types import COLLECTION_TYPE, NOTE_TYPE
+from .entities.types import COLLECTION_TYPE, NOTE_TYPE, enabled_types
 from .intelligence.registry import ensure_collections
 from .obsidian.render import render_all
+from .obsidian.graph_colors import legend as graph_legend
 from .obsidian.structure import ensure_structure
 from .obsidian.vaults import is_known, known_vaults
 from .obsidian.writer import ScopedWriter, file_sha256
@@ -197,6 +198,7 @@ class Service:
         return {
             "version": __version__,
             "notice": self.notice,
+            "graph_legend": graph_legend(self.cfg),
             "connector": {"ok": ok, "message": msg, "kind": self.cfg.source.kind,
                           "folder": self.cfg.source.folder or self.cfg.source.folder_path},
             "vault": {"ok": bool(v and v.is_dir()), "path": str(v) if v else None,
@@ -208,8 +210,7 @@ class Service:
             "counts": {
                 "notes": db.scalar("SELECT COUNT(*) FROM notes WHERE status='active'"),
                 "notes_total": db.scalar("SELECT COUNT(*) FROM notes"),
-                "entities": db.scalar("SELECT COUNT(*) FROM entities WHERE status='active' AND type NOT IN (?,?)",
-                                      (NOTE_TYPE, COLLECTION_TYPE)),
+                "entities": self._count_shown_entities(),
                 "relationships": db.scalar("SELECT COUNT(*) FROM relationships WHERE status='accepted'"),
                 "reviews": db.scalar("SELECT COUNT(*) FROM reviews WHERE status='pending'"),
                 "conflicts": db.scalar("SELECT COUNT(*) FROM conflicts WHERE status='open'"),
@@ -222,6 +223,11 @@ class Service:
                            "next_run_at": self.next_run_at.isoformat(timespec="seconds") if self.next_run_at else None,
                            "scheduler_alive": self.scheduler.is_alive()},
         }
+
+    def _count_shown_entities(self) -> int:
+        types = [t.key for t in enabled_types(self.cfg.intelligence.enabled_types)]
+        ph = ",".join("?" * len(types)) or "''"
+        return self.db.scalar(f"SELECT COUNT(*) FROM entities WHERE status='active' AND type IN ({ph})", types)
 
     # ------------------------------------------------------------------ diagnostics
     def integrity_report(self) -> dict:
@@ -298,7 +304,7 @@ class Service:
         src = self.cfg.vault() / mirror_path
         if src.exists():
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            ScopedWriter(self.cfg.generated_root()).write_bytes(f"Logs/backups/{stamp}/{mirror_path}", src.read_bytes())
+            ScopedWriter(self.cfg.generated_root()).write_bytes(f".kb/backups/{stamp}/{mirror_path}", src.read_bytes())
 
     # ------------------------------------------------------------------ provider test
     def test_provider(self) -> tuple[bool, str]:

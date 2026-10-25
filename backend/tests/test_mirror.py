@@ -38,7 +38,7 @@ def test_mirror_body_has_no_generated_content(env):
     env.sync()
     for p in (env.vault / "Apple Notes").glob("*.md"):
         fm, body = split_frontmatter(p.read_text("utf-8"))
-        assert "kb_mirror: true" in fm and "apple_notes_id" in fm
+        assert fm == ""  # by default the copy is just the note: no properties block
         # the only wiki-links allowed in a mirror body are embeds of the note's own images
         assert all(l.startswith("Apple Notes/_attachments/") for l in re.findall(r"!\[\[([^\]]+)\]\]", body))
         assert not re.search(r"(?<!!)\[\[", body), f"generated link inserted into {p.name}"
@@ -53,7 +53,15 @@ def test_mirror_text_matches_source_exactly(env):
                     "- Follow up on the accessibility workshop\n- Try the critique format from the afternoon session\n")
 
 
+def test_optional_sync_metadata_block(env):
+    env.cfg.mirror_frontmatter = True
+    env.sync()
+    fm, _ = split_frontmatter(env.mirror("Reading list").read_text("utf-8"))
+    assert "kb_mirror: true" in fm and "apple_notes_id" in fm
+
+
 def test_rich_text_note_and_attachments(env):
+    env.cfg.mirror_frontmatter = True  # attachment list lives in the optional metadata block
     rep = env.sync()
     text = env.mirror("Workshop notes — rich text").read_text("utf-8")
     assert "| Session | Speaker |" in text and "1. Warm-up" in text and "~~struck~~" in text

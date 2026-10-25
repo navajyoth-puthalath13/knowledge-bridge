@@ -117,19 +117,19 @@ def test_reprocessing_does_not_duplicate(env):
 
 def test_generated_pages_and_links(env):
     env.sync()
-    page = env.gen("Entities/Books/Finding Flow.md").read_text("utf-8")
-    assert 'kb_id: "book-finding-flow-' in page
-    assert "[[Knowledge Bridge/Collections/Books|Books]]" in page
+    page = env.gen("Books/Finding Flow.md").read_text("utf-8")
+    assert 'kb_id: "book-finding-flow-' in page and "tags: [book]" in page
     for t in ["Design Matters — Debbie Millman with a product designer", "Design Days 2026 — Day 2",
               "Friends of Figma Kochi — March meetup"]:
         assert f"[[Apple Notes/{t}|{t}]]" in page
-    books = env.gen("Collections/Books.md").read_text("utf-8")
-    assert "[[Knowledge Bridge/Entities/Books/Finding Flow|Finding Flow]] · 3 mentions" in books
-    personal = env.gen("Collections/Personal Thinking.md").read_text("utf-8")
-    assert "Entities/Personal Thinking/Engagement and difficult problems" in personal
-    idx = json.loads(env.gen("Index/entities.json").read_text("utf-8"))
+    # no hub pages that would show up as extra nodes in the graph
+    for hub in ("Collections", "Connections", "Index", "Logs", "Entities"):
+        assert not env.gen(hub).exists(), hub
+    show = env.gen("Podcasts/Design Matters.md").read_text("utf-8")
+    assert "[[Apple Notes/Design Matters — Debbie Millman with a product designer|" in show
+    idx = json.loads(env.gen(".kb/entities.json").read_text("utf-8"))
     assert any(e["name"] == "Finding Flow" for e in idx)
-    rels = json.loads(env.gen("Index/relationships.json").read_text("utf-8"))
+    rels = json.loads(env.gen(".kb/relationships.json").read_text("utf-8"))
     assert all(r["status"] == "accepted" for r in rels)
     # every [[link]] in generated pages resolves to a file in the vault
     import re
@@ -166,3 +166,35 @@ def test_llm_results_are_cached(env):
     # explicit reprocessing bypasses the cache
     env.sync(reprocess=[PODCAST])
     assert len(env.provider.calls) == calls + 1
+
+
+def test_default_graph_has_main_topics_only(env):
+    """App defaults: books, podcasts and events become nodes; people's names do not."""
+    env.cfg.intelligence.enabled_types = {}
+    env.sync()
+    assert env.entities_of("person") == [] and env.entities_of("podcast_episode") == []
+    assert env.entities_of("event") == []
+    assert env.entities_of("podcast_show") == ["Design Matters"]
+    assert env.entities_of("event_series") == ["After Office Hours", "Design Days", "Friends of Figma"]
+    folders = sorted(p.name for p in env.gen("").iterdir() if not p.name.startswith("."))
+    assert folders == ["Books", "Events", "Podcasts"]
+    # the podcast note connects to both its podcast and the book it mentions
+    note = "[[Apple Notes/Design Matters — Debbie Millman with a product designer|"
+    assert note in env.gen("Podcasts/Design Matters.md").read_text("utf-8")
+    assert note in env.gen("Books/Finding Flow.md").read_text("utf-8")
+
+
+def test_graph_colours_written_to_obsidian_settings(env):
+    import json
+
+    graph = env.vault / ".obsidian" / "graph.json"
+    graph.write_text(json.dumps({"showTags": False, "colorGroups": [{"query": "tag:#mine", "color": {"a": 1, "rgb": 1}}]}))
+    env.cfg.intelligence.enabled_types = {}
+    env.sync()
+    data = json.loads(graph.read_text())
+    queries = [g["query"] for g in data["colorGroups"]]
+    assert queries[:4] == ['path:"Apple Notes/"', 'path:"Knowledge Bridge/Books/"',
+                           'path:"Knowledge Bridge/Podcasts/"', 'path:"Knowledge Bridge/Events/"']
+    assert "tag:#mine" in queries and data["showTags"] is False  # user's own settings kept
+    env.sync()
+    assert len(json.loads(graph.read_text())["colorGroups"]) == 5  # no duplicates on later syncs

@@ -38,6 +38,9 @@ class Env:
         self.vault = tmp / "vault"
         (self.vault / ".obsidian").mkdir(parents=True)  # a real vault has .obsidian/
         self.cfg = AppConfig(vault_path=str(self.vault), source=SourceConfig(kind="folder", folder_path=str(self.src)))
+        # engine tests exercise every entity type; the app's defaults (main topics only) have their own tests
+        from app.entities.types import ENTITY_TYPES
+        self.cfg.intelligence.enabled_types = {k: k != "topic" for k in ENTITY_TYPES}
         self.db = Database(tmp / "kb.sqlite3")
         ensure_collections(self.db)
         self.provider = MockProvider(responses)
